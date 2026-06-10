@@ -3,10 +3,11 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTheme } from "next-themes"
-import { signUpSchema, type SignUpFormValues } from "@/lib/validations/auth"
+import { forgotPasswordSchema, type ForgotPasswordFormValues } from "@/lib/validations/auth"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -28,7 +29,6 @@ import {
 import {
   IconMail,
   IconLock,
-  IconUser,
   IconArrowLeft,
   IconSparkles,
   IconSun,
@@ -36,7 +36,6 @@ import {
   IconCircleCheck,
   IconLoader2,
   IconCheck,
-  IconBuilding,
   IconChevronRight,
   IconChevronLeft
 } from "@tabler/icons-react"
@@ -45,6 +44,7 @@ import { cn } from "@/lib/utils"
 export default function Page() {
   const [mounted, setMounted] = React.useState(false)
   const { resolvedTheme, setTheme } = useTheme()
+  const router = useRouter()
   const [currentStep, setCurrentStep] = React.useState(1)
   const [generatedOtp, setGeneratedOtp] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
@@ -57,15 +57,13 @@ export default function Page() {
     control,
     trigger,
     formState: { errors }
-  } = useForm<SignUpFormValues>({
-    resolver: zodResolver(signUpSchema as any) as any,
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema as any) as any,
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       otp: "",
-      organizationName: ""
+      password: "",
+      confirmPassword: ""
     }
   })
 
@@ -82,7 +80,7 @@ export default function Page() {
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (currentStep === 1) {
-      const isValid = await trigger(["name", "email", "password", "confirmPassword"])
+      const isValid = await trigger("email")
       if (isValid) {
         setCurrentStep(2)
       }
@@ -101,11 +99,14 @@ export default function Page() {
     }
   }
 
-  const onSubmit = (data: SignUpFormValues) => {
+  const onSubmit = (data: ForgotPasswordFormValues) => {
     setIsSubmitting(true)
     setTimeout(() => {
       setIsSubmitting(false)
       setSuccess(true)
+      setTimeout(() => {
+        router.push("/signin")
+      }, 2000)
     }, 1500)
   }
 
@@ -117,9 +118,9 @@ export default function Page() {
       </div>
 
       <header className="absolute top-0 w-full max-w-7xl h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium">
+        <Link href="/signin" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium">
           <IconArrowLeft className="size-4" />
-          <span>Back to Home</span>
+          <span>Back to Sign In</span>
         </Link>
 
         {mounted && (
@@ -148,9 +149,9 @@ export default function Page() {
             height={40}
             className="size-10 object-contain mb-4"
           />
-          <h1 className="text-2xl font-extrabold tracking-tight mb-2">Create Account</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight mb-2">Reset Password</h1>
           <p className="text-xs text-muted-foreground">
-            Get started with Cyberify Desk today
+            Recover your Cyberify Desk account password
           </p>
         </div>
 
@@ -182,7 +183,7 @@ export default function Page() {
                   "absolute top-8 text-2xs font-semibold whitespace-nowrap transition-colors duration-300",
                   currentStep >= 1 ? "text-foreground" : "text-muted-foreground"
                 )}>
-                  Account
+                  Email
                 </span>
               </div>
 
@@ -218,7 +219,7 @@ export default function Page() {
                   "absolute top-8 text-2xs font-semibold whitespace-nowrap transition-colors duration-300",
                   currentStep === 3 ? "text-foreground" : "text-muted-foreground"
                 )}>
-                  Organization
+                  New Password
                 </span>
               </div>
             </div>
@@ -232,9 +233,9 @@ export default function Page() {
               <IconCircleCheck className="size-7" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-foreground">Registration Successful</h3>
+              <h3 className="text-base font-bold text-foreground">Password Reset Successfully</h3>
               <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                Welcome onboard! Your workspace is being configured. Redirecting to sign in...
+                Your password has been updated. Redirecting to the Sign In workspace...
               </p>
             </div>
             <IconLoader2 className="size-5 animate-spin text-orange-500 mt-2" />
@@ -244,23 +245,6 @@ export default function Page() {
             <FieldGroup className="gap-5">
               {currentStep === 1 && (
                 <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <Field data-invalid={!!errors.name}>
-                    <FieldLabel htmlFor="name">Full Name</FieldLabel>
-                    <InputGroup>
-                      <InputGroupAddon align="inline-start">
-                        <IconUser className="size-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="name"
-                        type="text"
-                        placeholder="John Doe"
-                        {...register("name")}
-                        aria-invalid={!!errors.name}
-                      />
-                    </InputGroup>
-                    <FieldError>{errors.name?.message}</FieldError>
-                  </Field>
-
                   <Field data-invalid={!!errors.email}>
                     <FieldLabel htmlFor="email">Email Address</FieldLabel>
                     <InputGroup>
@@ -275,41 +259,10 @@ export default function Page() {
                         aria-invalid={!!errors.email}
                       />
                     </InputGroup>
+                    <FieldDescription>
+                      Enter the email address associated with your account.
+                    </FieldDescription>
                     <FieldError>{errors.email?.message}</FieldError>
-                  </Field>
-
-                  <Field data-invalid={!!errors.password}>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <InputGroup>
-                      <InputGroupAddon align="inline-start">
-                        <IconLock className="size-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        {...register("password")}
-                        aria-invalid={!!errors.password}
-                      />
-                    </InputGroup>
-                    <FieldError>{errors.password?.message}</FieldError>
-                  </Field>
-
-                  <Field data-invalid={!!errors.confirmPassword}>
-                    <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                    <InputGroup>
-                      <InputGroupAddon align="inline-start">
-                        <IconLock className="size-4" />
-                      </InputGroupAddon>
-                      <InputGroupInput
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        {...register("confirmPassword")}
-                        aria-invalid={!!errors.confirmPassword}
-                      />
-                    </InputGroup>
-                    <FieldError>{errors.confirmPassword?.message}</FieldError>
                   </Field>
                 </div>
               )}
@@ -370,21 +323,38 @@ export default function Page() {
 
               {currentStep === 3 && (
                 <div className="flex flex-col gap-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <Field data-invalid={!!errors.organizationName}>
-                    <FieldLabel htmlFor="organizationName">Organization Name</FieldLabel>
+                  <Field data-invalid={!!errors.password}>
+                    <FieldLabel htmlFor="password">New Password</FieldLabel>
                     <InputGroup>
                       <InputGroupAddon align="inline-start">
-                        <IconBuilding className="size-4" />
+                        <IconLock className="size-4" />
                       </InputGroupAddon>
                       <InputGroupInput
-                        id="organizationName"
-                        type="text"
-                        placeholder="Cyberify AI"
-                        {...register("organizationName")}
-                        aria-invalid={!!errors.organizationName}
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        {...register("password")}
+                        aria-invalid={!!errors.password}
                       />
                     </InputGroup>
-                    <FieldError>{errors.organizationName?.message}</FieldError>
+                    <FieldError>{errors.password?.message}</FieldError>
+                  </Field>
+
+                  <Field data-invalid={!!errors.confirmPassword}>
+                    <FieldLabel htmlFor="confirmPassword">Confirm New Password</FieldLabel>
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <IconLock className="size-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="••••••••"
+                        {...register("confirmPassword")}
+                        aria-invalid={!!errors.confirmPassword}
+                      />
+                    </InputGroup>
+                    <FieldError>{errors.confirmPassword?.message}</FieldError>
                   </Field>
                 </div>
               )}
@@ -421,23 +391,16 @@ export default function Page() {
                   {isSubmitting ? (
                     <>
                       <IconLoader2 className="size-4 animate-spin" />
-                      <span>Creating Space...</span>
+                      <span>Updating Password...</span>
                     </>
                   ) : (
-                    <span>Complete Setup</span>
+                    <span>Reset Password</span>
                   )}
                 </Button>
               )}
             </div>
           </form>
         )}
-
-        <div className="mt-8 text-center text-xs text-muted-foreground border-t border-border/40 pt-6">
-          <span>Already have an account? </span>
-          <Link href="/signin" className="text-orange-500 font-semibold hover:underline">
-            Sign In
-          </Link>
-        </div>
       </div>
 
       <footer className="mt-16 text-center text-2xs text-muted-foreground py-6">

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -88,9 +89,13 @@ export default function Page() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/20">
-              <IconSparkles className="size-5" />
-            </div>
+            <Image
+              src="/logo.png"
+              alt="Cyberify Desk Logo"
+              width={32}
+              height={32}
+              className="size-8 object-contain"
+            />
             <span className="text-xl font-bold tracking-tight bg-linear-to-r from-foreground to-foreground/80 bg-clip-text">
               Cyberify Desk
             </span>
@@ -130,7 +135,7 @@ export default function Page() {
             <Button variant="ghost" asChild className="hidden sm:inline-flex rounded-full text-sm font-semibold">
               <Link href="/signin">Sign In</Link>
             </Button>
-            <Button asChild className="rounded-full bg-gradient-to-r from-orange-600 to-amber-500 text-white hover:from-orange-500 hover:to-amber-400 shadow-md shadow-orange-500/10 font-semibold px-5">
+            <Button asChild className="rounded-full bg-linear-to-r from-orange-600 to-amber-500 text-white hover:from-orange-500 hover:to-amber-400 shadow-md shadow-orange-500/10 font-semibold px-5">
               <Link href="/signup">Get Started</Link>
             </Button>
           </div>
@@ -146,7 +151,7 @@ export default function Page() {
 
           <h1 className="max-w-4xl text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.05] text-foreground mb-6">
             Customer Support, <br />
-            <span className="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-orange-600 via-amber-500 to-orange-500 bg-clip-text text-transparent">
               Supercharged by AI.
             </span>
           </h1>
@@ -156,7 +161,7 @@ export default function Page() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 mb-20 w-full justify-center">
-            <Button size="lg" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-orange-500/20 px-8 py-6 text-base">
+            <Button size="lg" className="w-full sm:w-auto rounded-full bg-linear-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold shadow-lg shadow-orange-500/20 px-8 py-6 text-base">
               Get Started For Free
               <IconArrowRight className="size-5" />
             </Button>
@@ -381,7 +386,7 @@ export default function Page() {
                         {selectedTicket.timeline.map((item, idx) => (
                           <div key={idx} className="flex gap-4 relative">
                             {idx !== selectedTicket.timeline.length - 1 && (
-                              <div className="absolute top-5 left-2.5 bottom-[-16px] w-[1px] bg-border" />
+                              <div className="absolute top-5 left-2.5 bottom-[-16px] w-px bg-border" />
                             )}
                             <div className={`flex size-5 shrink-0 items-center justify-center rounded-full ${
                               item.status.includes("Solved") || item.status.includes("Autotriage")
@@ -577,7 +582,7 @@ export default function Page() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="rounded-full border-border/80 bg-background/70 px-5 py-6 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-orange-500/50"
                 />
-                <Button type="submit" className="w-full sm:w-auto rounded-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold px-7 py-6 text-sm shadow-md shadow-orange-500/10">
+                <Button type="submit" className="w-full sm:w-auto rounded-full bg-linear-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold px-7 py-6 text-sm shadow-md shadow-orange-500/10">
                   Deploy Your Desk
                 </Button>
               </form>

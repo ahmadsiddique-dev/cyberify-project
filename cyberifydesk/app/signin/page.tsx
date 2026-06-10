@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useForm } from "react-hook-form"
+import Image from "next/image"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useTheme } from "next-themes"
 import { signInSchema, type SignInFormValues } from "@/lib/validations/auth"
@@ -20,6 +21,11 @@ import {
   InputGroupAddon,
   InputGroupButton
 } from "@/components/ui/input-group"
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot
+} from "@/components/ui/input-otp"
 import {
   IconMail,
   IconLock,
@@ -42,6 +48,7 @@ export default function Page() {
     register,
     handleSubmit,
     setValue,
+    control,
     formState: { errors }
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema as any) as any,
@@ -102,9 +109,13 @@ export default function Page() {
 
       <div className="w-full max-w-md rounded-2xl border border-border/40 bg-card/30 backdrop-blur-md p-8 shadow-2xl relative">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-orange-600 to-amber-500 text-white shadow-lg shadow-orange-500/20 mb-4">
-            <IconSparkles className="size-5" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Cyberify Desk Logo"
+            width={40}
+            height={40}
+            className="size-10 object-contain mb-4"
+          />
           <h1 className="text-2xl font-extrabold tracking-tight mb-2">Welcome Back</h1>
           <p className="text-xs text-muted-foreground">
             Sign in to access your Cyberify Desk helpdesk
@@ -167,29 +178,40 @@ export default function Page() {
               </Field>
 
               <Field data-invalid={!!errors.otp}>
-                <FieldLabel htmlFor="otp">6-Digit Verification Code (OTP)</FieldLabel>
-                <InputGroup>
-                  <InputGroupInput
-                    id="otp"
-                    type="text"
-                    maxLength={6}
-                    placeholder="000000"
-                    {...register("otp")}
-                    aria-invalid={!!errors.otp}
-                  />
-                  <InputGroupAddon align="inline-end">
-                    <InputGroupButton
-                      variant="secondary"
-                      size="xs"
-                      onClick={handleGenerateOtp}
-                      className="rounded px-2.5 py-1 bg-orange-600/10 text-orange-500 hover:bg-orange-600/20 font-semibold"
+                <div className="flex justify-between items-center mb-1.5">
+                  <FieldLabel htmlFor="otp">6-Digit Verification Code (OTP)</FieldLabel>
+                  <button
+                    type="button"
+                    onClick={handleGenerateOtp}
+                    className="text-2xs text-orange-500 hover:underline font-semibold"
+                  >
+                    Generate OTP
+                  </button>
+                </div>
+                <Controller
+                  control={control}
+                  name="otp"
+                  render={({ field }) => (
+                    <InputOTP
+                      id="otp"
+                      maxLength={6}
+                      value={field.value}
+                      onChange={field.onChange}
+                      aria-invalid={!!errors.otp}
                     >
-                      Generate
-                    </InputGroupButton>
-                  </InputGroupAddon>
-                </InputGroup>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  )}
+                />
                 <FieldDescription>
-                  Click Generate to receive a mock verification code for testing.
+                  Enter the verification code. You can click Generate OTP for a mock code.
                 </FieldDescription>
                 <FieldError>{errors.otp?.message}</FieldError>
               </Field>
