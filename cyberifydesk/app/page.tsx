@@ -5,6 +5,7 @@ import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   IconBrain,
   IconMessage2,
@@ -102,19 +103,26 @@ export default function Page() {
 
           <div className="flex items-center gap-4">
             {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-                className="rounded-full hover:bg-muted"
-                aria-label="Toggle theme"
-              >
-                {resolvedTheme === "dark" ? (
-                  <IconSun className="size-5 text-yellow-400" />
-                ) : (
-                  <IconMoon className="size-5 text-indigo-950" />
-                )}
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                    className="rounded-full hover:bg-muted"
+                    aria-label="Toggle theme"
+                  >
+                    {resolvedTheme === "dark" ? (
+                      <IconSun className="size-5 text-yellow-400" />
+                    ) : (
+                      <IconMoon className="size-5 text-indigo-950" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Press <kbd className="font-sans font-bold bg-muted/20 px-1 py-0.5 rounded text-2xs">D</kbd> to toggle theme
+                </TooltipContent>
+              </Tooltip>
             )}
 
             <Button variant="ghost" className="hidden sm:inline-flex rounded-full text-sm font-semibold">
