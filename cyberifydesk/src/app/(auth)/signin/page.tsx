@@ -5,7 +5,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useTheme } from "next-themes"
 import { signInSchema, type SignInFormValues } from "@/lib/validations/auth"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,33 +12,29 @@ import {
   FieldGroup,
   FieldLabel,
   FieldError,
-  FieldDescription
+  FieldDescription,
 } from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-  InputGroupButton
+  InputGroupButton,
 } from "@/components/ui/input-group"
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSlot
+  InputOTPSlot,
 } from "@/components/ui/input-otp"
 import {
   IconMail,
   IconLock,
   IconArrowLeft,
-  IconSparkles,
-  IconSun,
-  IconMoon,
   IconCircleCheck,
-  IconLoader2
+  IconLoader2,
 } from "@tabler/icons-react"
+import { ThemeSwitch } from "@/components/elements/ThemeSwitch"
 
 export default function Page() {
-  const [mounted, setMounted] = React.useState(false)
-  const { resolvedTheme, setTheme } = useTheme()
   const [generatedOtp, setGeneratedOtp] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [loginSuccess, setLoginSuccess] = React.useState(false)
@@ -49,19 +44,15 @@ export default function Page() {
     handleSubmit,
     setValue,
     control,
-    formState: { errors }
+    formState: { errors },
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema as any) as any,
     defaultValues: {
       email: "",
       password: "",
-      otp: ""
-    }
+      otp: "",
+    },
   })
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const handleGenerateOtp = () => {
     const code = Math.floor(100000 + Math.random() * 900000).toString()
@@ -78,65 +69,62 @@ export default function Page() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground transition-colors duration-300 font-sans flex flex-col justify-center items-center px-4 selection:bg-primary/30">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] pointer-events-none overflow-hidden">
-        <div className="absolute top-[-200px] left-1/4 w-[600px] h-[600px] rounded-full bg-orange-600/10 blur-[150px] dark:bg-orange-600/15" />
-        <div className="absolute top-[-100px] right-1/4 w-[500px] h-[500px] rounded-full bg-amber-500/10 blur-[130px] dark:bg-amber-500/15" />
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 font-sans text-foreground transition-colors duration-300 selection:bg-primary/30">
+      <div className="pointer-events-none absolute top-0 left-1/2 h-[600px] w-full max-w-7xl -translate-x-1/2 overflow-hidden">
+        <div className="absolute top-[-200px] left-1/4 h-[600px] w-[600px] rounded-full bg-orange-600/10 blur-[150px] dark:bg-orange-600/15" />
+        <div className="absolute top-[-100px] right-1/4 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[130px] dark:bg-amber-500/15" />
       </div>
 
-      <header className="absolute top-0 w-full max-w-7xl h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium">
+      <header className="absolute top-0 flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
           <IconArrowLeft className="size-4" />
           <span>Back to Home</span>
         </Link>
 
-        {mounted && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            className="rounded-full hover:bg-muted"
-            aria-label="Toggle theme"
-          >
-            {resolvedTheme === "dark" ? (
-              <IconSun className="size-5 text-yellow-400" />
-            ) : (
-              <IconMoon className="size-5 text-orange-950" />
-            )}
-          </Button>
-        )}
+        <ThemeSwitch />
       </header>
 
-      <div className="w-full max-w-md rounded-2xl border border-border/40 bg-card/30 backdrop-blur-md p-8 shadow-2xl relative">
-        <div className="flex flex-col items-center text-center mb-8">
+      <div className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card/30 p-8 shadow-2xl backdrop-blur-md">
+        <div className="mb-8 flex flex-col items-center text-center">
           <Image
             src="/logo.png"
             alt="Cyberify Desk Logo"
             width={40}
             height={40}
-            className="size-10 object-contain mb-4"
+            className="mb-4 size-10 object-contain"
           />
-          <h1 className="text-2xl font-extrabold tracking-tight mb-2">Welcome Back</h1>
+          <h1 className="mb-2 text-2xl font-extrabold tracking-tight">
+            Welcome Back
+          </h1>
           <p className="text-xs text-muted-foreground">
             Sign in to access your Cyberify Desk helpdesk
           </p>
         </div>
 
         {loginSuccess ? (
-          <div className="flex flex-col items-center text-center py-6 gap-4">
+          <div className="flex flex-col items-center gap-4 py-6 text-center">
             <div className="flex size-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
               <IconCircleCheck className="size-7" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-foreground">Workspace Authenticated</h3>
-              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                Verification succeeded. Redirecting to Ahmad Siddique&apos;s workspace...
+              <h3 className="text-base font-bold text-foreground">
+                Workspace Authenticated
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                Verification succeeded. Redirecting to Ahmad Siddique&apos;s
+                workspace...
               </p>
             </div>
-            <IconLoader2 className="size-5 animate-spin text-orange-500 mt-2" />
+            <IconLoader2 className="mt-2 size-5 animate-spin text-orange-500" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-5"
+          >
             <FieldGroup className="gap-5">
               <Field data-invalid={!!errors.email}>
                 <FieldLabel htmlFor="email">Email Address</FieldLabel>
@@ -156,9 +144,12 @@ export default function Page() {
               </Field>
 
               <Field data-invalid={!!errors.password}>
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link href="/forgot-password" className="text-2xs text-orange-500 hover:underline">
+                  <Link
+                    href="/forgot-password"
+                    className="text-2xs text-orange-500 hover:underline"
+                  >
                     Forgot Password?
                   </Link>
                 </div>
@@ -178,12 +169,14 @@ export default function Page() {
               </Field>
 
               <Field data-invalid={!!errors.otp}>
-                <div className="flex justify-between items-center mb-1.5">
-                  <FieldLabel htmlFor="otp">6-Digit Verification Code (OTP)</FieldLabel>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <FieldLabel htmlFor="otp">
+                    6-Digit Verification Code (OTP)
+                  </FieldLabel>
                   <button
                     type="button"
                     onClick={handleGenerateOtp}
-                    className="text-2xs text-orange-500 hover:underline font-semibold"
+                    className="text-2xs font-semibold text-orange-500 hover:underline"
                   >
                     Generate OTP
                   </button>
@@ -211,16 +204,21 @@ export default function Page() {
                   )}
                 />
                 <FieldDescription>
-                  Enter the verification code. You can click Generate OTP for a mock code.
+                  Enter the verification code. You can click Generate OTP for a
+                  mock code.
                 </FieldDescription>
                 <FieldError>{errors.otp?.message}</FieldError>
               </Field>
 
               {generatedOtp && (
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-500 flex items-center gap-2">
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-500">
                   <IconCircleCheck className="size-4 shrink-0" />
                   <span>
-                    Mock OTP generated: <strong className="font-mono tracking-widest">{generatedOtp}</strong> (Auto-filled)
+                    Mock OTP generated:{" "}
+                    <strong className="font-mono tracking-widest">
+                      {generatedOtp}
+                    </strong>{" "}
+                    (Auto-filled)
                   </span>
                 </div>
               )}
@@ -229,7 +227,7 @@ export default function Page() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 rounded-full bg-linear-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-semibold shadow-md shadow-orange-500/10 py-5"
+              className="mt-2 w-full rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-5 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400"
             >
               {isSubmitting ? (
                 <>
@@ -243,15 +241,18 @@ export default function Page() {
           </form>
         )}
 
-        <div className="mt-8 text-center text-xs text-muted-foreground border-t border-border/40 pt-6">
+        <div className="mt-8 border-t border-border/40 pt-6 text-center text-xs text-muted-foreground">
           <span>Don&apos;t have an account? </span>
-          <Link href="/signup" className="text-orange-500 font-semibold hover:underline">
+          <Link
+            href="/signup"
+            className="font-semibold text-orange-500 hover:underline"
+          >
             Get Started
           </Link>
         </div>
       </div>
 
-      <footer className="mt-16 text-center text-2xs text-muted-foreground py-6">
+      <footer className="text-2xs mt-16 py-6 text-center text-muted-foreground">
         <span>Cyberify AI Support Desk built by Ahmad Siddique</span>
       </footer>
 

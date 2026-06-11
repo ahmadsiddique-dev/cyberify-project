@@ -120,7 +120,7 @@ function InputGroupInput({
     <input
       data-slot="input-group-control"
       className={cn(
-        "flex-1 min-w-0 bg-transparent px-2.5 py-1 text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none border-0 shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent",
+        "min-w-0 flex-1 border-0 bg-transparent px-2.5 py-1 text-base text-foreground shadow-none ring-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 aria-invalid:ring-0 md:text-sm dark:bg-transparent",
         className
       )}
       {...props}
@@ -136,7 +136,7 @@ function InputGroupTextarea({
     <textarea
       data-slot="input-group-control"
       className={cn(
-        "flex-1 min-w-0 bg-transparent px-2.5 py-2 text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none border-0 shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent resize-none",
+        "min-w-0 flex-1 resize-none border-0 bg-transparent px-2.5 py-2 text-base text-foreground shadow-none ring-0 outline-none placeholder:text-muted-foreground focus-visible:ring-0 aria-invalid:ring-0 md:text-sm dark:bg-transparent",
         className
       )}
       {...props}
