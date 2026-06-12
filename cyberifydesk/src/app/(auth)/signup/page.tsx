@@ -5,34 +5,33 @@ import Link from "next/link"
 import Image from "next/image"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signUpSchema, type SignUpFormValues } from "@/lib/validations/auth"
-import { Button } from "@/components/ui/button"
-import { useApi } from "@/hooks/apiClient"
+import { signUpSchema, type SignUpFormValues } from "../../../lib/validations/auth"
+import { Button } from "../../../components/ui/button"
+import { useApi } from "../../../hooks/apiClient"
 import axios from "axios"
 import { useRouter } from "next/navigation"
-import { useUserStore } from "@/store/user"
+import { useUserStore } from "../../../store/user"
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldError,
   FieldDescription,
-} from "@/components/ui/field"
+} from "../../../components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-} from "@/components/ui/input-group"
+} from "../../../components/ui/input-group"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from "../../../components/ui/input-otp"
 import {
   IconMail,
   IconLock,
   IconUser,
-  IconArrowLeft,
   IconCircleCheck,
   IconLoader2,
   IconCheck,
@@ -40,8 +39,8 @@ import {
   IconChevronRight,
   IconChevronLeft,
 } from "@tabler/icons-react"
-import { cn } from "@/lib/utils"
-import { ThemeSwitch } from "@/components/elements/ThemeSwitch"
+import { cn } from "../../../lib/utils"
+import { AuthLayout } from "../../../components/elements/AuthLayout"
 
 export default function Page() {
   const [currentStep, setCurrentStep] = React.useState(1)
@@ -134,31 +133,14 @@ export default function Page() {
     console.log("Submitting data:", data)
     const { email, otp } = data
     const res = await verifyExecute({ email, otp })
-    setAuth(res.accessToken, res.user)
+    
     if (res && res.success) {
       setSuccess(true)
-      router.push("/dashboard")
     }
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 font-sans text-foreground transition-colors duration-300 selection:bg-primary/30">
-      <div className="pointer-events-none absolute top-0 left-1/2 h-150 w-full max-w-7xl -translate-x-1/2 overflow-hidden">
-        <div className="absolute -top-50 left-1/4 h-150 w-150 rounded-full bg-orange-600/10 blur-[150px] dark:bg-orange-600/15" />
-        <div className="absolute -top-25 right-1/4 h-125 w-125 rounded-full bg-amber-500/10 blur-[130px] dark:bg-amber-500/15" />
-      </div>
-
-      <header className="absolute top-0 flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <IconArrowLeft className="size-4" />
-          <span>Back to Home</span>
-        </Link>
-        <ThemeSwitch />
-      </header>
-
+    <AuthLayout backLink="/" backText="Back to Home">
       <div className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card/30 p-8 shadow-2xl backdrop-blur-md">
         <div className="mb-6 flex flex-col items-center text-center">
           <Image
@@ -459,10 +441,6 @@ export default function Page() {
           </Link>
         </div>
       </div>
-
-      <footer className="text-2xs mt-16 py-6 text-center text-muted-foreground">
-        <span>Cyberify AI Support Desk built by Ahmad Siddique</span>
-      </footer>
-    </div>
+    </AuthLayout>
   )
 }

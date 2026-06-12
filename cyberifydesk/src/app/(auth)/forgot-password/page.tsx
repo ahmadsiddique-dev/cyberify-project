@@ -1,13 +1,11 @@
 "use client"
 
-
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useTheme } from "next-themes"
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -35,9 +33,6 @@ import {
 import {
   IconMail,
   IconLock,
-  IconArrowLeft,
-  IconSun,
-  IconMoon,
   IconCircleCheck,
   IconLoader2,
   IconCheck,
@@ -45,11 +40,9 @@ import {
   IconChevronLeft,
 } from "@tabler/icons-react"
 import { cn } from "../../../lib/utils"
-import { ThemeSwitch } from "../../../components/elements/ThemeSwitch"
+import { AuthLayout } from "../../../components/elements/AuthLayout"
 
 export default function Page() {
-  const [mounted, setMounted] = React.useState(false)
-  const { resolvedTheme, setTheme } = useTheme()
   const router = useRouter()
   const [currentStep, setCurrentStep] = React.useState(1)
   const [success, setSuccess] = React.useState(false)
@@ -93,7 +86,6 @@ export default function Page() {
   const {
     register,
     handleSubmit,
-    setValue,
     control,
     trigger,
     formState: { errors },
@@ -106,10 +98,6 @@ export default function Page() {
       confirmPassword: "",
     },
   })
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -161,40 +149,7 @@ export default function Page() {
   const isSubmitting = requestOtpLoading || verifyOtpLoading || resetPasswordLoading
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 font-sans text-foreground transition-colors duration-300 selection:bg-primary/30">
-      <div className="pointer-events-none absolute top-0 left-1/2 h-150 w-full max-w-7xl -translate-x-1/2 overflow-hidden">
-        <div className="absolute -top-50 left-1/4 h-150 w-150 rounded-full bg-orange-600/10 blur-[150px] dark:bg-orange-600/15" />
-        <div className="absolute -top-25 right-1/4 h-125 w-125 rounded-full bg-amber-500/10 blur-[130px] dark:bg-amber-500/15" />
-      </div>
-
-      <header className="absolute top-0 flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/signin"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <IconArrowLeft className="size-4" />
-          <span>Back to Sign In</span>
-        </Link>
-
-        {mounted && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-            }
-            className="rounded-full hover:bg-muted"
-            aria-label="Toggle theme"
-          >
-            {resolvedTheme === "dark" ? (
-              <IconSun className="size-5 text-yellow-400" />
-            ) : (
-              <IconMoon className="size-5 text-orange-950" />
-            )}
-          </Button>
-        )}
-      </header>
-
+    <AuthLayout backLink="/signin" backText="Back to Sign In">
       <div className="relative w-full max-w-md rounded-2xl border border-border/40 bg-card/30 p-8 shadow-2xl backdrop-blur-md">
         <div className="mb-6 flex flex-col items-center text-center">
           <Image
@@ -493,10 +448,6 @@ export default function Page() {
           </form>
         )}
       </div>
-
-      <footer className="text-2xs mt-16 py-6 text-center text-muted-foreground">
-        <span>Cyberify AI Support Desk built by Ahmad Siddique</span>
-      </footer>
-    </div>
+    </AuthLayout>
   )
 }
