@@ -129,12 +129,22 @@ export default function Page() {
     }
   }
 
+  React.useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => {
+        router.push("/dashboard")
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [success, router])
+
   const onSubmit = async (data: SignUpFormValues) => {
     console.log("Submitting data:", data)
     const { email, otp } = data
     const res = await verifyExecute({ email, otp })
     
     if (res && res.success) {
+      setAuth(res.accessToken, res.user)
       setSuccess(true)
     }
   }
@@ -230,7 +240,7 @@ export default function Page() {
               </h3>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 Welcome onboard! Your workspace is being configured. Redirecting
-                to sign in...
+                to your workspace...
               </p>
             </div>
             <IconLoader2 className="mt-2 size-5 animate-spin text-orange-500" />

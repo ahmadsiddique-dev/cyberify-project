@@ -89,7 +89,7 @@ export default function Page() {
   React.useEffect(() => {
     if (loginSuccess) {
       const timer = setTimeout(() => {
-        router.push("/")
+        router.push("/dashboard")
       }, 2000)
       return () => clearTimeout(timer)
     }

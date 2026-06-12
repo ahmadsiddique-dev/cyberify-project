@@ -9,9 +9,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
-} from "../../../lib/validations/auth"
-import { Button } from "../../../components/ui/button"
-import { useApi } from "../../../hooks/apiClient"
+} from "@/lib/validations/auth"
+import { Button } from "@/components/ui/button"
+import { useApi } from "@/hooks/apiClient"
 import axios from "axios"
 import {
   Field,
@@ -19,17 +19,17 @@ import {
   FieldLabel,
   FieldError,
   FieldDescription,
-} from "../../../components/ui/field"
+} from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-} from "../../../components/ui/input-group"
+} from "@/components/ui/input-group"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "../../../components/ui/input-otp"
+} from "@/components/ui/input-otp"
 import {
   IconMail,
   IconLock,
@@ -39,8 +39,8 @@ import {
   IconChevronRight,
   IconChevronLeft,
 } from "@tabler/icons-react"
-import { cn } from "../../../lib/utils"
-import { AuthLayout } from "../../../components/elements/AuthLayout"
+import { cn } from "@/lib/utils"
+import { AuthLayout } from "@/components/elements/AuthLayout"
 
 export default function Page() {
   const router = useRouter()
@@ -141,7 +141,7 @@ export default function Page() {
       setSuccess(true)
       setTimeout(() => {
         router.push("/signin")
-      }, 2000)
+      }, 1000)
     }
   }
 

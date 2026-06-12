@@ -1,12 +1,5 @@
 import { create } from 'zustand'
-
-//     accessToken: accessToken,
-//     user: {
-//       _id: user._id,
-//       email: user.email,
-//       fullName: user.fullName,
-//       role: user.role,
-//     }
+import { persist } from 'zustand/middleware'
 
 type User = {
   _id: string,
@@ -19,15 +12,33 @@ interface UserState {
   accessToken: string,
   user: User,
   setAuth: (accessToken: string, user: User) => void,
+  clearAuth: () => void,
 }
 
-export const useUserStore = create<UserState>()((set) => ({
-  accessToken: '',
-  user: {
-    _id: '',
-    email: '',
-    fullName: '',
-    role: '',
-  },
-  setAuth: (accessToken, user) => set({ accessToken, user }),
-}))
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      accessToken: '',
+      user: {
+        _id: '',
+        email: '',
+        fullName: '',
+        role: '',
+      },
+      setAuth: (accessToken, user) => set({ accessToken, user }),
+      clearAuth: () =>
+        set({
+          accessToken: '',
+          user: {
+            _id: '',
+            email: '',
+            fullName: '',
+            role: '',
+          },
+        }),
+    }),
+    {
+      name: 'user-auth-storage',
+    }
+  )
+)
