@@ -134,9 +134,10 @@ export default function Page() {
     console.log("Submitting data:", data)
     const { email, otp } = data
     const res = await verifyExecute({ email, otp })
-    
+    setAuth(res.accessToken, res.user)
     if (res && res.success) {
       setSuccess(true)
+      router.push("/dashboard")
     }
   }
 

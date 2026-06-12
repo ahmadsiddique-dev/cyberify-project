@@ -2,7 +2,6 @@
 
 import dbConnect from "@/hooks/dbConnection"
 import { User } from "@/models/User.model"
-import { hashPassword } from "@/lib/bcrypt"
 import { sendOtpEmail } from "@/lib/sendEmail"
 import { NextResponse } from "next/server"
 import { catchAsyncRoute } from "@/lib/catchAsyncRoute"
@@ -23,15 +22,14 @@ export const POST = catchAsyncRoute(async (request: Request) => {
   const userExist = await User.findOne({ email })
 
   if (userExist) {
-    return NextResponse.json({ error: "User already exists" }, { status: 400 })
+    return NextResponse.json({ error: "Agent already exists" }, { status: 400 })
   }
-  const hashedPassword = await hashPassword(password)
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString()
 
   const user = new User({
     fullName: name,
     email: email,
-    password: hashedPassword,
+    password: password,
     organization: organizationName,
     role: role || "agent",
     otp: generatedOtp,
@@ -62,7 +60,7 @@ export const PATCH = catchAsyncRoute(async (request: Request) => {
   const user = await User.findOne({ email })
 
   if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 })
+    return NextResponse.json({ error: "Agent not found" }, { status: 404 })
   }
 
   if (user.otp !== otp) {
