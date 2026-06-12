@@ -1,17 +1,17 @@
 // TODO: Error handling and edge cases ( OTP expiration, rate limiting, and if not verified email can be used by anyone else )
 
 import dbConnect from "@/hooks/dbConnection"
-import { Signup } from "@/schemas/Signup.schema"
+import { User } from "@/models/User.model"
 import { hashPassword } from "@/lib/bcrypt"
 import { sendOtpEmail } from "@/lib/sendEmail"
 import { NextResponse } from "next/server"
 import { catchAsyncRoute } from "@/lib/catchAsyncRoute"
+import { cookies } from "next/headers"
 
 export const POST = catchAsyncRoute(async (request: Request) => {
   await dbConnect()
 
-  const { name, email, password, organizationName, role } =
-    await request.json()
+  const { name, email, password, organizationName, role } = await request.json()
 
   if (!name || !email || !password || !organizationName || !role) {
     return NextResponse.json(
@@ -20,19 +20,15 @@ export const POST = catchAsyncRoute(async (request: Request) => {
     )
   }
 
-
-  const userExist = await Signup.findOne({ email })
+  const userExist = await User.findOne({ email })
 
   if (userExist) {
-    return NextResponse.json(
-      { error: "User already exists" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "User already exists" }, { status: 400 })
   }
   const hashedPassword = await hashPassword(password)
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString()
 
-  const user = new Signup({
+  const user = new User({
     fullName: name,
     email: email,
     password: hashedPassword,
@@ -49,7 +45,6 @@ export const POST = catchAsyncRoute(async (request: Request) => {
     success: true,
     message: "OTP sent to your email",
   })
-  
 })
 
 export const PATCH = catchAsyncRoute(async (request: Request) => {
@@ -64,28 +59,42 @@ export const PATCH = catchAsyncRoute(async (request: Request) => {
     )
   }
 
-  const user = await Signup.findOne({ email })
+  const user = await User.findOne({ email })
 
   if (!user) {
-    return NextResponse.json(
-      { error: "User not found" },
-      { status: 404 }
-    )
+    return NextResponse.json({ error: "User not found" }, { status: 404 })
   }
 
   if (user.otp !== otp) {
-    return NextResponse.json(
-      { error: "Invalid OTP" },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Invalid OTP" }, { status: 400 })
   }
+
+  const accessToken = user.generateAccessToken()
+  const refreshToken = user.generateRefreshToken()
 
   user.otp = null
   user.isVerified = true
+  user.refreshToken = refreshToken
   await user.save()
+
+  const cookieStore = await cookies()
+  cookieStore.set("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  })
 
   return NextResponse.json({
     success: true,
     message: "Email verified successfully",
+    accessToken: accessToken,
+    user: {
+      _id: user._id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+    }
   })
 })

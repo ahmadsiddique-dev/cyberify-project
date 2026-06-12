@@ -9,6 +9,8 @@ import { signUpSchema, type SignUpFormValues } from "@/lib/validations/auth"
 import { Button } from "@/components/ui/button"
 import { useApi } from "@/hooks/apiClient"
 import axios from "axios"
+import { useRouter } from "next/navigation"
+import { useUserStore } from "@/store/user"
 import {
   Field,
   FieldGroup,
@@ -44,17 +46,34 @@ import { ThemeSwitch } from "@/components/elements/ThemeSwitch"
 export default function Page() {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [success, setSuccess] = React.useState(false)
-
-  const { loading: apiLoading, error: apiError, execute } = useApi(
-    React.useCallback((payload: Omit<SignUpFormValues, "otp" | "confirmPassword"> & { role: string; otp?: string }) =>
-      axios.post("/api/auth/agent/signup", payload).then((res) => res.data),
+  const router = useRouter()
+  const setAuth = useUserStore((state) => state.setAuth)
+  const {
+    loading: apiLoading,
+    error: apiError,
+    execute,
+  } = useApi(
+    React.useCallback(
+      (
+        payload: Omit<SignUpFormValues, "otp" | "confirmPassword"> & {
+          role: string
+          otp?: string
+        }
+      ) =>
+        axios.post("/api/auth/agent/signup", payload).then((res) => res.data),
       []
     )
   )
 
-  const { loading: verifyLoading, error: verifyError, execute: verifyExecute, data: verifyData } = useApi(
-    React.useCallback((payload: { email: string; otp: string }) =>
-      axios.patch("/api/auth/agent/signup", payload).then((res) => res.data),
+  const {
+    loading: verifyLoading,
+    error: verifyError,
+    execute: verifyExecute,
+    data: verifyData,
+  } = useApi(
+    React.useCallback(
+      (payload: { email: string; otp: string }) =>
+        axios.patch("/api/auth/agent/signup", payload).then((res) => res.data),
       []
     )
   )
@@ -113,8 +132,9 @@ export default function Page() {
 
   const onSubmit = async (data: SignUpFormValues) => {
     console.log("Submitting data:", data)
-    const { email, otp } = data;
-    const res = await verifyExecute({ email, otp  })
+    const { email, otp } = data
+    const res = await verifyExecute({ email, otp })
+    
     if (res && res.success) {
       setSuccess(true)
     }
