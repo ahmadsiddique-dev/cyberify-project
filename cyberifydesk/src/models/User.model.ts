@@ -11,6 +11,9 @@ export interface IUser extends Document {
   role: "user" | "agent"
   otp?: string | null
   refreshToken: string | null
+  isPasswordCorrect(password: string): Promise<boolean>
+  generateAccessToken(): string
+  generateRefreshToken(): string
 }
 
 const UserSchema: Schema = new Schema<IUser>(

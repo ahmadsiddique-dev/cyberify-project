@@ -5,45 +5,78 @@ import Link from "next/link"
 import Image from "next/image"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signInSchema, type SignInFormValues } from "@/lib/validations/auth"
-import { Button } from "@/components/ui/button"
+import { signInSchema, type SignInFormValues } from "../../../lib/validations/auth"
+import { Button } from "../../../components/ui/button"
+import { useRouter } from "next/navigation"
+import axios from "axios"
+import { useUserStore } from "../../../store/user"
+import { useApi } from "../../../hooks/apiClient"
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldError,
   FieldDescription,
-} from "@/components/ui/field"
+} from "../../../components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-  InputGroupButton,
-} from "@/components/ui/input-group"
+} from "../../../components/ui/input-group"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from "../../../components/ui/input-otp"
 import {
   IconMail,
   IconLock,
   IconArrowLeft,
   IconCircleCheck,
   IconLoader2,
+  IconChevronRight,
+  IconChevronLeft,
 } from "@tabler/icons-react"
-import { ThemeSwitch } from "@/components/elements/ThemeSwitch"
+import { cn } from "../../../lib/utils"
+import { ThemeSwitch } from "../../../components/elements/ThemeSwitch"
 
 export default function Page() {
-  const [generatedOtp, setGeneratedOtp] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [currentStep, setCurrentStep] = React.useState(1)
   const [loginSuccess, setLoginSuccess] = React.useState(false)
+  const [generatedOtp, setGeneratedOtp] = React.useState("")
+  const router = useRouter()
+  const setAuth = useUserStore((state) => state.setAuth)
+
+  const {
+    loading: apiLoading,
+    error: apiError,
+    execute: executeSignIn,
+  } = useApi(
+    React.useCallback(
+      (payload: { email: string; password: string }) =>
+        axios.post("/api/auth/agent/signin", payload).then((res) => res.data),
+      []
+    )
+  )
+
+  const {
+    loading: verifyLoading,
+    error: verifyError,
+    execute: executeVerifyOtp,
+  } = useApi(
+    React.useCallback(
+      (payload: { email: string; otp: string }) =>
+        axios.patch("/api/auth/agent/signin", payload).then((res) => res.data),
+      []
+    )
+  )
 
   const {
     register,
     handleSubmit,
     setValue,
     control,
+    trigger,
     formState: { errors },
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema as any) as any,
@@ -54,19 +87,60 @@ export default function Page() {
     },
   })
 
+  React.useEffect(() => {
+    if (loginSuccess) {
+      const timer = setTimeout(() => {
+        router.push("/")
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [loginSuccess, router])
+
   const handleGenerateOtp = () => {
     const code = Math.floor(100000 + Math.random() * 900000).toString()
     setGeneratedOtp(code)
     setValue("otp", code, { shouldValidate: true })
   }
 
-  const onSubmit = (data: SignInFormValues) => {
-    setIsSubmitting(true)
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setLoginSuccess(true)
-    }, 1500)
+  const handleNextStep = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (currentStep === 1) {
+      const isValid = await trigger(["email", "password"])
+      if (isValid) {
+        const { email, password } = control._formValues
+        console.log("Form Values", { email, password })
+        const res = await executeSignIn({
+          email,
+          password
+        })
+        if (res && res.success) {
+          setCurrentStep(2)
+        }
+      }
+    }
   }
+
+  const handlePrevStep = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const onSubmit = async (data: SignInFormValues) => {
+    console.log('data', data)
+    const res = await executeVerifyOtp({
+      email: data.email,
+      otp: data.otp,
+    })
+    if (res && res.success) {
+      setAuth(res.accessToken, res.user)
+      setLoginSuccess(true)
+    }
+  }
+
+  const activeError = apiError || verifyError
+  const isSubmitting = apiLoading || verifyLoading
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 font-sans text-foreground transition-colors duration-300 selection:bg-primary/30">
@@ -83,7 +157,6 @@ export default function Page() {
           <IconArrowLeft className="size-4" />
           <span>Back to Home</span>
         </Link>
-
         <ThemeSwitch />
       </header>
 
@@ -114,8 +187,7 @@ export default function Page() {
                 Workspace Authenticated
               </h3>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-                Verification succeeded. Redirecting to Ahmad Siddique&apos;s
-                workspace...
+                Verification succeeded. Redirecting to your workspace...
               </p>
             </div>
             <IconLoader2 className="mt-2 size-5 animate-spin text-orange-500" />
@@ -126,118 +198,170 @@ export default function Page() {
             className="flex flex-col gap-5"
           >
             <FieldGroup className="gap-5">
-              <Field data-invalid={!!errors.email}>
-                <FieldLabel htmlFor="email">Email Address</FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon align="inline-start">
-                    <IconMail className="size-4" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="email"
-                    type="email"
-                    placeholder="name@company.com"
-                    {...register("email")}
-                    aria-invalid={!!errors.email}
-                  />
-                </InputGroup>
-                <FieldError>{errors.email?.message}</FieldError>
-              </Field>
+              {currentStep === 1 && (
+                <div className="flex animate-in flex-col gap-5 duration-300 fade-in slide-in-from-bottom-2">
+                  <Field data-invalid={!!errors.email}>
+                    <FieldLabel htmlFor="email">Email Address</FieldLabel>
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <IconMail className="size-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="email"
+                        type="email"
+                        placeholder="name@company.com"
+                        {...register("email")}
+                        aria-invalid={!!errors.email}
+                      />
+                    </InputGroup>
+                    <FieldError>{errors.email?.message}</FieldError>
+                  </Field>
 
-              <Field data-invalid={!!errors.password}>
-                <div className="flex items-center justify-between">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="text-2xs text-orange-500 hover:underline"
-                  >
-                    Forgot Password?
-                  </Link>
+                  <Field data-invalid={!!errors.password}>
+                    <div className="flex items-center justify-between">
+                      <FieldLabel htmlFor="password">Password</FieldLabel>
+                      <Link
+                        href="/forgot-password"
+                        className="text-2xs text-orange-500 hover:underline"
+                      >
+                        Forgot Password?
+                      </Link>
+                    </div>
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <IconLock className="size-4" />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id="password"
+                        type="password"
+                        placeholder="••••••••"
+                        {...register("password")}
+                        aria-invalid={!!errors.password}
+                      />
+                    </InputGroup>
+                    <FieldError>{errors.password?.message}</FieldError>
+                  </Field>
                 </div>
-                <InputGroup>
-                  <InputGroupAddon align="inline-start">
-                    <IconLock className="size-4" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    {...register("password")}
-                    aria-invalid={!!errors.password}
-                  />
-                </InputGroup>
-                <FieldError>{errors.password?.message}</FieldError>
-              </Field>
+              )}
 
-              <Field data-invalid={!!errors.otp}>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <FieldLabel htmlFor="otp">
-                    6-Digit Verification Code (OTP)
-                  </FieldLabel>
-                  <button
-                    type="button"
-                    onClick={handleGenerateOtp}
-                    className="text-2xs font-semibold text-orange-500 hover:underline"
-                  >
-                    Generate OTP
-                  </button>
-                </div>
-                <Controller
-                  control={control}
-                  name="otp"
-                  render={({ field }) => (
-                    <InputOTP
-                      id="otp"
-                      maxLength={6}
-                      value={field.value}
-                      onChange={field.onChange}
-                      aria-invalid={!!errors.otp}
-                    >
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
+              {currentStep === 2 && (
+                <div className="flex animate-in flex-col gap-5 duration-300 fade-in slide-in-from-bottom-2">
+                  <Field data-invalid={!!errors.otp}>
+                    <div className="mb-1.5 flex items-center justify-between">
+                      <FieldLabel htmlFor="otp">
+                        6-Digit Verification Code (OTP)
+                      </FieldLabel>
+                      <button
+                        type="button"
+                        onClick={handleGenerateOtp}
+                        className="text-2xs font-semibold text-orange-500 hover:underline"
+                      >
+                        Generate OTP
+                      </button>
+                    </div>
+                    <Controller
+                      control={control}
+                      name="otp"
+                      render={({ field }) => (
+                        <div className="flex justify-center py-2">
+                          <InputOTP
+                            id="otp"
+                            maxLength={6}
+                            value={field.value}
+                            onChange={field.onChange}
+                            aria-invalid={!!errors.otp}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+                      )}
+                    />
+                    <FieldDescription>
+                      Enter the verification code. You can click Generate OTP for a
+                      mock code.
+                    </FieldDescription>
+                    <FieldError>{errors.otp?.message}</FieldError>
+                  </Field>
+
+                  {generatedOtp && (
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-500">
+                      <IconCircleCheck className="size-4 shrink-0" />
+                      <span>
+                        Mock OTP generated:{" "}
+                        <strong className="font-mono tracking-widest">
+                          {generatedOtp}
+                        </strong>{" "}
+                        (Auto-filled)
+                      </span>
+                    </div>
                   )}
-                />
-                <FieldDescription>
-                  Enter the verification code. You can click Generate OTP for a
-                  mock code.
-                </FieldDescription>
-                <FieldError>{errors.otp?.message}</FieldError>
-              </Field>
-
-              {generatedOtp && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-500">
-                  <IconCircleCheck className="size-4 shrink-0" />
-                  <span>
-                    Mock OTP generated:{" "}
-                    <strong className="font-mono tracking-widest">
-                      {generatedOtp}
-                    </strong>{" "}
-                    (Auto-filled)
-                  </span>
                 </div>
               )}
             </FieldGroup>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 w-full rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-5 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400"
-            >
-              {isSubmitting ? (
-                <>
-                  <IconLoader2 className="size-4 animate-spin" />
-                  <span>Verifying Workspace...</span>
-                </>
-              ) : (
-                <span>Sign In</span>
+            {activeError && (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
+                {activeError}
+              </div>
+            )}
+
+            <div className="mt-4 flex gap-3">
+              {currentStep > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePrevStep}
+                  disabled={isSubmitting}
+                  className="rounded-full border-border/80 px-5 font-semibold"
+                >
+                  <IconChevronLeft className="mr-1 size-4" />
+                  <span>Back</span>
+                </Button>
               )}
-            </Button>
+
+              {currentStep < 2 ? (
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={isSubmitting}
+                  className="grow rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-5 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400"
+                >
+                  {apiLoading ? (
+                    <>
+                      <IconLoader2 className="size-4 animate-spin" />
+                      <span>Sending OTP...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <IconChevronRight className="ml-1 size-4" />
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="grow rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-5 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400"
+                >
+                  {verifyLoading ? (
+                    <>
+                      <IconLoader2 className="size-4 animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <span>Sign In</span>
+                  )}
+                </Button>
+              )}
+            </div>
           </form>
         )}
 
@@ -255,9 +379,6 @@ export default function Page() {
       <footer className="text-2xs mt-16 py-6 text-center text-muted-foreground">
         <span>Cyberify AI Support Desk built by Ahmad Siddique</span>
       </footer>
-
-      {/* TODO: Connect sign-in verification payload to session endpoint */}
-      {/* TODO: Replace mock OTP generation with actual SMS/email authentication service */}
     </div>
   )
 }

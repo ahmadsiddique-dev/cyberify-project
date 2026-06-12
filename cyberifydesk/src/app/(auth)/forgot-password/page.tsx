@@ -1,5 +1,6 @@
 "use client"
 
+
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -10,30 +11,31 @@ import { useTheme } from "next-themes"
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
-} from "@/lib/validations/auth"
-import { Button } from "@/components/ui/button"
+} from "../../../lib/validations/auth"
+import { Button } from "../../../components/ui/button"
+import { useApi } from "../../../hooks/apiClient"
+import axios from "axios"
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldError,
   FieldDescription,
-} from "@/components/ui/field"
+} from "../../../components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-} from "@/components/ui/input-group"
+} from "../../../components/ui/input-group"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp"
+} from "../../../components/ui/input-otp"
 import {
   IconMail,
   IconLock,
   IconArrowLeft,
-  IconSparkles,
   IconSun,
   IconMoon,
   IconCircleCheck,
@@ -42,16 +44,51 @@ import {
   IconChevronRight,
   IconChevronLeft,
 } from "@tabler/icons-react"
-import { cn } from "@/lib/utils"
+import { cn } from "../../../lib/utils"
+import { ThemeSwitch } from "../../../components/elements/ThemeSwitch"
 
 export default function Page() {
   const [mounted, setMounted] = React.useState(false)
   const { resolvedTheme, setTheme } = useTheme()
   const router = useRouter()
   const [currentStep, setCurrentStep] = React.useState(1)
-  const [generatedOtp, setGeneratedOtp] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [success, setSuccess] = React.useState(false)
+
+  const {
+    loading: requestOtpLoading,
+    error: requestOtpError,
+    execute: executeRequestOtp,
+  } = useApi(
+    React.useCallback(
+      (payload: { email: string }) =>
+        axios.post("/api/auth/agent/forgot-password/new", payload).then((res) => res.data),
+      []
+    )
+  )
+
+  const {
+    loading: verifyOtpLoading,
+    error: verifyOtpError,
+    execute: executeVerifyOtp,
+  } = useApi(
+    React.useCallback(
+      (payload: { email: string; otp: string }) =>
+        axios.post("/api/auth/agent/forgot-password/verify", payload).then((res) => res.data),
+      []
+    )
+  )
+
+  const {
+    loading: resetPasswordLoading,
+    error: resetPasswordError,
+    execute: executeResetPassword,
+  } = useApi(
+    React.useCallback(
+      (payload: { email: string; password: string }) =>
+        axios.patch("/api/auth/agent/forgot-password/new", payload).then((res) => res.data),
+      []
+    )
+  )
 
   const {
     register,
@@ -74,23 +111,28 @@ export default function Page() {
     setMounted(true)
   }, [])
 
-  const handleGenerateOtp = () => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString()
-    setGeneratedOtp(code)
-    setValue("otp", code, { shouldValidate: true })
-  }
-
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault()
     if (currentStep === 1) {
       const isValid = await trigger("email")
       if (isValid) {
-        setCurrentStep(2)
+        const values = control._formValues
+        const res = await executeRequestOtp({ email: values.email })
+        if (res && res.success) {
+          setCurrentStep(2)
+        }
       }
     } else if (currentStep === 2) {
       const isValid = await trigger("otp")
       if (isValid) {
-        setCurrentStep(3)
+        const values = control._formValues
+        const res = await executeVerifyOtp({
+          email: values.email,
+          otp: values.otp,
+        })
+        if (res && res.success) {
+          setCurrentStep(3)
+        }
       }
     }
   }
@@ -102,22 +144,27 @@ export default function Page() {
     }
   }
 
-  const onSubmit = (data: ForgotPasswordFormValues) => {
-    setIsSubmitting(true)
-    setTimeout(() => {
-      setIsSubmitting(false)
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
+    const res = await executeResetPassword({
+      email: data.email,
+      password: data.password,
+    })
+    if (res && res.success) {
       setSuccess(true)
       setTimeout(() => {
         router.push("/signin")
       }, 2000)
-    }, 1500)
+    }
   }
+
+  const activeError = requestOtpError || verifyOtpError || resetPasswordError
+  const isSubmitting = requestOtpLoading || verifyOtpLoading || resetPasswordLoading
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-4 font-sans text-foreground transition-colors duration-300 selection:bg-primary/30">
-      <div className="pointer-events-none absolute top-0 left-1/2 h-[600px] w-full max-w-7xl -translate-x-1/2 overflow-hidden">
-        <div className="absolute top-[-200px] left-1/4 h-[600px] w-[600px] rounded-full bg-orange-600/10 blur-[150px] dark:bg-orange-600/15" />
-        <div className="absolute top-[-100px] right-1/4 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[130px] dark:bg-amber-500/15" />
+      <div className="pointer-events-none absolute top-0 left-1/2 h-150 w-full max-w-7xl -translate-x-1/2 overflow-hidden">
+        <div className="absolute -top-50 left-1/4 h-150 w-150 rounded-full bg-orange-600/10 blur-[150px] dark:bg-orange-600/15" />
+        <div className="absolute -top-25 right-1/4 h-125 w-125 rounded-full bg-amber-500/10 blur-[130px] dark:bg-amber-500/15" />
       </div>
 
       <header className="absolute top-0 flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -313,13 +360,6 @@ export default function Page() {
                       <FieldLabel htmlFor="otp">
                         6-Digit Verification Code (OTP)
                       </FieldLabel>
-                      <button
-                        type="button"
-                        onClick={handleGenerateOtp}
-                        className="text-2xs font-semibold text-orange-500 hover:underline"
-                      >
-                        Generate OTP
-                      </button>
                     </div>
                     <Controller
                       control={control}
@@ -346,24 +386,10 @@ export default function Page() {
                       )}
                     />
                     <FieldDescription>
-                      Enter the code sent to your email. You can click Generate
-                      OTP for a mock code.
+                      Enter the code sent to your email.
                     </FieldDescription>
                     <FieldError>{errors.otp?.message}</FieldError>
                   </Field>
-
-                  {generatedOtp && (
-                    <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-emerald-500">
-                      <IconCircleCheck className="size-4 shrink-0" />
-                      <span>
-                        Mock OTP generated:{" "}
-                        <strong className="font-mono tracking-widest">
-                          {generatedOtp}
-                        </strong>{" "}
-                        (Auto-filled)
-                      </span>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -408,12 +434,19 @@ export default function Page() {
               )}
             </FieldGroup>
 
+            {activeError && (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
+                {activeError}
+              </div>
+            )}
+
             <div className="mt-4 flex gap-3">
               {currentStep > 1 && (
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handlePrevStep}
+                  disabled={isSubmitting}
                   className="rounded-full border-border/80 px-5 font-semibold"
                 >
                   <IconChevronLeft className="mr-1 size-4" />
@@ -425,10 +458,20 @@ export default function Page() {
                 <Button
                   type="button"
                   onClick={handleNextStep}
+                  disabled={isSubmitting}
                   className="grow rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-5 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400"
                 >
-                  <span>Continue</span>
-                  <IconChevronRight className="ml-1 size-4" />
+                  {isSubmitting ? (
+                    <>
+                      <IconLoader2 className="size-4 animate-spin" />
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Continue</span>
+                      <IconChevronRight className="ml-1 size-4" />
+                    </>
+                  )}
                 </Button>
               ) : (
                 <Button
