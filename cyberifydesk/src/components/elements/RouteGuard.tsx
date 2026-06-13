@@ -8,6 +8,7 @@ import { api } from "@/lib/api"
 import { BackgroundBlur } from "./BackgroundBlur"
 import { IconLoader2 } from "@tabler/icons-react"
 import { slugify } from "@/lib/utils"
+import { useCustomerStore } from "@/store/customer"
 
 interface RouteGuardProps {
   children: React.ReactNode
@@ -20,6 +21,12 @@ export function RouteGuard({ children }: RouteGuardProps) {
   const user = useUserStore((state) => state.user)
   const setAuth = useUserStore((state) => state.setAuth)
   const clearAuth = useUserStore((state) => state.clearAuth)
+
+  const customerAccessToken = useCustomerStore((state) => state.accessToken)
+  const customerUser = useCustomerStore((state) => state.user)
+  const setCustomerAuth = useCustomerStore((state) => state.setAuth)
+  const clearCustomerAuth = useCustomerStore((state) => state.clearAuth)
+
   const router = useRouter()
   const pathname = usePathname()
 
@@ -37,6 +44,18 @@ export function RouteGuard({ children }: RouteGuardProps) {
     )
   )
 
+  const { execute: verifyCustomerSession } = useApi(
+    React.useCallback(
+      () =>
+        api
+          .post("/api/auth/agent/verify", null, {
+            headers: { "X-Role": "customer" },
+          })
+          .then((res) => res.data),
+      []
+    )
+  )
+
   React.useEffect(() => {
     setHydrated(true)
   }, [])
@@ -45,63 +64,101 @@ export function RouteGuard({ children }: RouteGuardProps) {
     if (!hydrated) return
 
     const checkAuth = async () => {
-      const isAuthRoute = authRoutes.includes(pathname)
       const pathParts = pathname.split("/").filter(Boolean)
       const isProtectedRoute =
         pathParts.length >= 2 &&
         ["dashboard", "tickets", "customers", "knowledge-base", "settings"].includes(pathParts[1])
+      const isCustomerRoute = pathParts.length >= 2 && pathParts[1] === "hc"
+      const isAuthRoute = authRoutes.includes(pathname)
 
-      if (!isAuthRoute && !isProtectedRoute) {
+      if (!isAuthRoute && !isProtectedRoute && !isCustomerRoute) {
         setVerifying(false)
         return
       }
 
-      if (!accessToken) {
-        verifiedRef.current = false
-        if (isProtectedRoute) {
+      if (isCustomerRoute) {
+        if (!customerAccessToken) {
+          setVerifying(false)
+          return
+        }
+        const res = await verifyCustomerSession()
+        if (res && res.success) {
+          setCustomerAuth(res.accessToken || customerAccessToken, res.user)
+        } else {
+          clearCustomerAuth()
+        }
+        setVerifying(false)
+        return
+      }
+
+      if (isProtectedRoute || isAuthRoute) {
+        if (!accessToken) {
+          verifiedRef.current = false
+          if (isProtectedRoute) {
+            clearAuth()
+            router.push("/signin")
+          } else {
+            setVerifying(false)
+          }
+          return
+        }
+
+        if (verifiedRef.current) {
+          if (isProtectedRoute && user && user.role !== "agent") {
+            const orgSlug = user.organization ? slugify(user.organization) : "default"
+            router.push(`/${orgSlug}/hc`)
+            return
+          }
+
+          if (isAuthRoute) {
+            const orgSlug = user?.organization ? slugify(user.organization) : "default"
+            if (user?.role === "agent") {
+              router.push(`/${orgSlug}/dashboard`)
+            } else {
+              router.push(`/${orgSlug}/hc`)
+            }
+          } else {
+            setVerifying(false)
+          }
+          return
+        }
+
+        const res = await verifySession()
+        if (res && res.success) {
+          const newAccessToken = res.accessToken || accessToken
+          setAuth(newAccessToken, res.user)
+          verifiedRef.current = true
+
+          if (isProtectedRoute && res.user && res.user.role !== "agent") {
+            const orgSlug = res.user.organization ? slugify(res.user.organization) : "default"
+            router.push(`/${orgSlug}/hc`)
+            return
+          }
+
+          if (isAuthRoute) {
+            const orgSlug = res.user?.organization ? slugify(res.user.organization) : "default"
+            if (res.user?.role === "agent") {
+              router.push(`/${orgSlug}/dashboard`)
+            } else {
+              router.push(`/${orgSlug}/hc`)
+            }
+          } else {
+            setVerifying(false)
+          }
+        } else {
           clearAuth()
-          router.push("/signin")
-        } else {
-          setVerifying(false)
-        }
-        return
-      }
-
-      if (verifiedRef.current) {
-        if (isAuthRoute) {
-          const orgSlug = user?.organization ? slugify(user.organization) : "default"
-          router.push(`/${orgSlug}/dashboard`)
-        } else {
-          setVerifying(false)
-        }
-        return
-      }
-
-      const res = await verifySession()
-      if (res && res.success) {
-        const newAccessToken = res.accessToken || accessToken
-        setAuth(newAccessToken, res.user)
-        verifiedRef.current = true
-
-        if (isAuthRoute) {
-          const orgSlug = res.user?.organization ? slugify(res.user.organization) : "default"
-          router.push(`/${orgSlug}/dashboard`)
-        } else {
-          setVerifying(false)
-        }
-      } else {
-        clearAuth()
-        if (isProtectedRoute) {
-          router.push("/signin")
-        } else {
-          setVerifying(false)
+          if (isProtectedRoute) {
+            router.push("/signin")
+          } else {
+            setVerifying(false)
+          }
         }
       }
     }
 
     setVerifying(true)
     checkAuth()
-  }, [pathname, accessToken, hydrated, verifySession, clearAuth, setAuth, router, user?.organization])
+  }, [pathname, accessToken, customerAccessToken, hydrated, verifySession, verifyCustomerSession, clearAuth, clearCustomerAuth, setAuth, setCustomerAuth, router, user?.organization, customerUser?.organization])
 
   if (!hydrated) {
     return null

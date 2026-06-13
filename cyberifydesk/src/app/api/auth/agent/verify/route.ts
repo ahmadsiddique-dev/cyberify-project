@@ -19,7 +19,7 @@ export const POST = catchAsyncRoute(async (request: Request) => {
   const accessToken = authHeader.split(" ")[1]
 
   const cookieStore = await cookies()
-  const refreshToken = cookieStore.get("refreshToken")?.value
+  const refreshToken = cookieStore.get("refreshToken")?.value || cookieStore.get("customerRefreshToken")?.value
 
   if (!refreshToken) {
     return NextResponse.json(
@@ -41,15 +41,15 @@ export const POST = catchAsyncRoute(async (request: Request) => {
       role: string
     }
 
-    if (decodedAccess.role !== "agent") {
+    if (decodedAccess.role !== "agent" && decodedAccess.role !== "user") {
       return NextResponse.json(
-        { error: "Access denied. Agents only." },
+        { error: "Access denied. Invalid role." },
         { status: 403 }
       )
     }
 
     const user = await User.findById(decodedAccess._id)
-    if (!user || user.role !== "agent") {
+    if (!user || (user.role !== "agent" && user.role !== "user")) {
       return NextResponse.json(
         { error: "Access denied. User not found or incorrect role." },
         { status: 403 }
@@ -77,7 +77,7 @@ export const POST = catchAsyncRoute(async (request: Request) => {
         }
 
         const user = await User.findById(decodedRefresh._id)
-        if (!user || user.refreshToken !== refreshToken || user.role !== "agent") {
+        if (!user || user.refreshToken !== refreshToken || (user.role !== "agent" && user.role !== "user")) {
           return NextResponse.json(
             { error: "Session expired. Please sign in again." },
             { status: 401 }

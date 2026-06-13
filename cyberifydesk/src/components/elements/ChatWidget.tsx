@@ -107,7 +107,7 @@ export function ChatWidget() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,0.1)_transparent] dark:[scrollbar-color:rgba(255,255,255,0.1)_transparent]">
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full scrollbar-thin [scrollbar-color:rgba(0,0,0,0.1)_transparent] dark:[scrollbar-color:rgba(255,255,255,0.1)_transparent]">
             {messages.map((msg) => (
               <div
                 key={msg.id}
