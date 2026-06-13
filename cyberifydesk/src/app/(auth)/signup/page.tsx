@@ -5,29 +5,29 @@ import Link from "next/link"
 import Image from "next/image"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { signUpSchema, type SignUpFormValues } from "../../../lib/validations/auth"
-import { Button } from "../../../components/ui/button"
-import { useApi } from "../../../hooks/apiClient"
-import axios from "axios"
+import { signUpSchema, type SignUpFormValues } from "@/lib/validations/auth"
+import { Button } from "@/components/ui/button"
+import { useApi } from "@/hooks/apiClient"
+import { api } from "@/lib/api"
 import { useRouter } from "next/navigation"
-import { useUserStore } from "../../../store/user"
+import { useUserStore } from "@/store/user"
 import {
   Field,
   FieldGroup,
   FieldLabel,
   FieldError,
   FieldDescription,
-} from "../../../components/ui/field"
+} from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
   InputGroupAddon,
-} from "../../../components/ui/input-group"
+} from "@/components/ui/input-group"
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "../../../components/ui/input-otp"
+} from "@/components/ui/input-otp"
 import {
   IconMail,
   IconLock,
@@ -39,8 +39,8 @@ import {
   IconChevronRight,
   IconChevronLeft,
 } from "@tabler/icons-react"
-import { cn } from "../../../lib/utils"
-import { AuthLayout } from "../../../components/elements/AuthLayout"
+import { cn } from "@/lib/utils"
+import { AuthLayout } from "@/components/elements/AuthLayout"
 
 export default function Page() {
   const [currentStep, setCurrentStep] = React.useState(1)
@@ -59,7 +59,7 @@ export default function Page() {
           otp?: string
         }
       ) =>
-        axios.post("/api/auth/agent/signup", payload).then((res) => res.data),
+        api.post("/api/auth/agent/signup", payload).then((res) => res.data),
       []
     )
   )
@@ -72,7 +72,7 @@ export default function Page() {
   } = useApi(
     React.useCallback(
       (payload: { email: string; otp: string }) =>
-        axios.patch("/api/auth/agent/signup", payload).then((res) => res.data),
+        api.patch("/api/auth/agent/signup", payload).then((res) => res.data),
       []
     )
   )

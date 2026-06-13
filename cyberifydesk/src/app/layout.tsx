@@ -36,7 +36,7 @@ export default function RootLayout({
         "antialiased",
         fontSans.variable,
         fontMono.variable,
-        "font-serif",
+        "font-sans",
         lora.variable,
         publicSansHeading.variable
       )}
