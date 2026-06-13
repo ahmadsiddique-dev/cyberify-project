@@ -1,11 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { useForm, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useCustomerStore } from "@/store/customer"
 import { useApi } from "@/hooks/apiClient"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
 import {
   InputGroup,
   InputGroupInput,
@@ -24,23 +26,57 @@ import {
   IconLoader2,
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
+import {
+  customerSignInSchema,
+  customerSignUpSchema,
+} from "@/lib/validations/auth"
 
 interface HelpCenterAuthProps {
   organizationName: string
 }
 
+interface CustomerAuthFormValues {
+  name: string
+  email: string
+  password: string
+  confirmPassword?: string
+  otp: string
+}
+
 export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
   const [tab, setTab] = React.useState<"signin" | "signup">("signin")
   const [step, setStep] = React.useState<1 | 2>(1)
-  const [email, setEmail] = React.useState("")
-  const [password, setPassword] = React.useState("")
-  const [confirmPassword, setConfirmPassword] = React.useState("")
-  const [fullName, setFullName] = React.useState("")
-  const [otp, setOtp] = React.useState("")
   const [mockOtp, setMockOtp] = React.useState("")
   const [errorMsg, setErrorMsg] = React.useState("")
 
   const setAuth = useCustomerStore((state) => state.setAuth)
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    control,
+    trigger,
+    formState: { errors },
+    reset,
+  } = useForm<CustomerAuthFormValues>({
+    resolver: zodResolver(
+      (tab === "signin" ? customerSignInSchema : customerSignUpSchema) as any
+    ) as any,
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      otp: "",
+    },
+  })
+
+  React.useEffect(() => {
+    reset()
+    setErrorMsg("")
+    setMockOtp("")
+  }, [tab, reset])
 
   const { loading: signinLoading, execute: executeSignIn } = useApi(
     React.useCallback(
@@ -72,21 +108,30 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
     )
   )
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.MouseEvent) => {
     e.preventDefault()
     setErrorMsg("")
 
-    if (tab === "signup" && password !== confirmPassword) {
-      setErrorMsg("Passwords do not match")
-      return
-    }
+    const fieldsToValidate =
+      tab === "signin"
+        ? (["email", "password"] as const)
+        : (["name", "email", "password", "confirmPassword"] as const)
+
+    const isValid = await trigger(fieldsToValidate)
+    if (!isValid) return
+
+    const values = control._formValues
 
     try {
       if (tab === "signin") {
-        const res = await executeSignIn({ email, password })
+        const res = await executeSignIn({
+          email: values.email,
+          password: values.password,
+        })
         if (res && res.success) {
           if (res.otp) {
             setMockOtp(res.otp)
+            setValue("otp", res.otp, { shouldValidate: true })
           }
           setStep(2)
         } else {
@@ -94,9 +139,9 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
         }
       } else {
         const res = await executeSignUp({
-          name: fullName,
-          email,
-          password,
+          name: values.name,
+          email: values.email,
+          password: values.password,
           organizationName,
           role: "user",
         })
@@ -111,13 +156,14 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
     }
   }
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: CustomerAuthFormValues) => {
     setErrorMsg("")
-
     const url = tab === "signin" ? "/api/auth/agent/signin" : "/api/auth/agent/signup"
     try {
-      const res = await executeVerify(url, { email, otp })
+      const res = await executeVerify(url, {
+        email: data.email,
+        otp: data.otp,
+      })
       if (res && res.success) {
         setAuth(res.accessToken, res.user)
       } else {
@@ -131,7 +177,7 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
   const handleGenerateMockOtp = () => {
     const code = Math.floor(100000 + Math.random() * 900000).toString()
     setMockOtp(code)
-    setOtp(code)
+    setValue("otp", code, { shouldValidate: true })
   }
 
   return (
@@ -153,7 +199,6 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
             <button
               onClick={() => {
                 setTab("signin")
-                setErrorMsg("")
               }}
               className={cn(
                 "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
@@ -167,7 +212,6 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
             <button
               onClick={() => {
                 setTab("signup")
-                setErrorMsg("")
               }}
               className={cn(
                 "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
@@ -180,9 +224,9 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
             </button>
           </div>
 
-          <form onSubmit={handleSendOtp} className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4">
             {tab === "signup" && (
-              <Field>
+              <Field data-invalid={!!errors.name}>
                 <FieldLabel htmlFor="fullname">Full Name</FieldLabel>
                 <InputGroup>
                   <InputGroupAddon align="inline-start">
@@ -191,17 +235,16 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
                   <InputGroupInput
                     id="fullname"
                     type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
                     placeholder="John Doe"
                     className="text-xs py-2 h-9"
+                    {...register("name")}
                   />
                 </InputGroup>
+                <FieldError>{errors.name?.message}</FieldError>
               </Field>
             )}
 
-            <Field>
+            <Field data-invalid={!!errors.email}>
               <FieldLabel htmlFor="email">Email Address</FieldLabel>
               <InputGroup>
                 <InputGroupAddon align="inline-start">
@@ -210,16 +253,15 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
                 <InputGroupInput
                   id="email"
                   type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
                   className="text-xs py-2 h-9"
+                  {...register("email")}
                 />
               </InputGroup>
+              <FieldError>{errors.email?.message}</FieldError>
             </Field>
 
-            <Field>
+            <Field data-invalid={!!errors.password}>
               <FieldLabel htmlFor="password">Password</FieldLabel>
               <InputGroup>
                 <InputGroupAddon align="inline-start">
@@ -228,17 +270,16 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
                 <InputGroupInput
                   id="password"
                   type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="text-xs py-2 h-9"
+                  {...register("password")}
                 />
               </InputGroup>
+              <FieldError>{errors.password?.message}</FieldError>
             </Field>
 
             {tab === "signup" && (
-              <Field>
+              <Field data-invalid={!!errors.confirmPassword}>
                 <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
                 <InputGroup>
                   <InputGroupAddon align="inline-start">
@@ -247,13 +288,12 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
                   <InputGroupInput
                     id="confirmPassword"
                     type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     className="text-xs py-2 h-9"
+                    {...register("confirmPassword")}
                   />
                 </InputGroup>
+                <FieldError>{errors.confirmPassword?.message}</FieldError>
               </Field>
             )}
 
@@ -264,7 +304,8 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
             )}
 
             <Button
-              type="submit"
+              type="button"
+              onClick={handleSendOtp}
               disabled={signinLoading || signupLoading}
               className="mt-2 rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-4 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400 text-xs h-9"
             >
@@ -280,8 +321,8 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
           </form>
         </div>
       ) : (
-        <form onSubmit={handleVerifyOtp} className="flex flex-col gap-5">
-          <Field>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <Field data-invalid={!!errors.otp}>
             <div className="flex items-center justify-between">
               <FieldLabel htmlFor="otp">Verification Code (OTP)</FieldLabel>
               <button
@@ -293,17 +334,29 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
               </button>
             </div>
             <div className="flex justify-center py-2">
-              <InputOTP id="otp" maxLength={6} value={otp} onChange={setOtp}>
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} className="size-9 text-xs" />
-                  <InputOTPSlot index={1} className="size-9 text-xs" />
-                  <InputOTPSlot index={2} className="size-9 text-xs" />
-                  <InputOTPSlot index={3} className="size-9 text-xs" />
-                  <InputOTPSlot index={4} className="size-9 text-xs" />
-                  <InputOTPSlot index={5} className="size-9 text-xs" />
-                </InputOTPGroup>
-              </InputOTP>
+              <Controller
+                control={control}
+                name="otp"
+                render={({ field }) => (
+                  <InputOTP
+                    id="otp"
+                    maxLength={6}
+                    value={field.value}
+                    onChange={field.onChange}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} className="size-9 text-xs" />
+                      <InputOTPSlot index={1} className="size-9 text-xs" />
+                      <InputOTPSlot index={2} className="size-9 text-xs" />
+                      <InputOTPSlot index={3} className="size-9 text-xs" />
+                      <InputOTPSlot index={4} className="size-9 text-xs" />
+                      <InputOTPSlot index={5} className="size-9 text-xs" />
+                    </InputOTPGroup>
+                  </InputOTP>
+                )}
+              />
             </div>
+            <FieldError>{errors.otp?.message}</FieldError>
           </Field>
 
           {mockOtp && (
@@ -355,3 +408,4 @@ export function HelpCenterAuth({ organizationName }: HelpCenterAuthProps) {
     </div>
   )
 }
+

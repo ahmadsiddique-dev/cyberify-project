@@ -53,3 +53,27 @@ export const forgotPasswordSchema = z
   })
 
 export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>
+
+export const customerSignUpSchema = z
+  .object({
+    name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: confirmPasswordSchema,
+    otp: otpSchema.optional().or(z.literal("")),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+
+export type CustomerSignUpFormValues = z.infer<typeof customerSignUpSchema>
+
+export const customerSignInSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  otp: otpSchema.optional().or(z.literal("")),
+})
+
+export type CustomerSignInFormValues = z.infer<typeof customerSignInSchema>
+
