@@ -210,21 +210,30 @@ export function TicketChatArea({
         onSubmit={handleSendMessage}
         className="p-4 border-t border-border/40 bg-card/40 flex items-end gap-3"
       >
-        <textarea
-          ref={textareaRef}
-          value={input}
-          disabled={currentStatus === "close"}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              handleSendMessage(e)
-            }
-          }}
-          rows={1}
-          placeholder={currentStatus === "close" ? "This ticket is closed." : `Reply to ${customerName}...`}
-          className="flex-1 px-4 py-2.5 rounded-xl border border-border/40 bg-background/50 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder:text-muted-foreground/60 resize-none max-h-36 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full disabled:opacity-50 disabled:bg-muted/10"
-        />
+        <div className="relative flex-1 flex items-center">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            disabled={currentStatus === "close"}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage(e)
+              }
+            }}
+            rows={1}
+            placeholder={currentStatus === "close" ? "This ticket is closed." : `Reply to ${customerName}...`}
+            className="flex-1 pl-4 pr-10 py-2.5 rounded-xl border border-border/40 bg-background/50 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder:text-muted-foreground/60 resize-none max-h-36 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full disabled:opacity-50 disabled:bg-muted/10"
+          />
+          <button
+            type="button"
+            disabled={currentStatus === "close"}
+            className="absolute right-3 bottom-2.5 text-muted-foreground hover:text-orange-500 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          >
+            <IconSparkles className="size-4" />
+          </button>
+        </div>
         <Button
           type="button"
           onClick={handleToggleStatus}

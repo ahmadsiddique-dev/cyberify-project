@@ -16,6 +16,7 @@ import fetchStats from "./_lib/fetch_stats"
 
 import { BackgroundBlur } from "@/components/elements/BackgroundBlur"
 import Footer from "../_components/Footer"
+import { HelpCenterShareCard } from "./_components/HelpCenterShareCard"
 
 export type Props = {
   params: Promise<{ organization: string }>
@@ -102,6 +103,8 @@ export default async function Page({params}: Props) {
             </CardContent>
           </Card>
         </div>
+
+        <HelpCenterShareCard orgSlug={organization} />
       </main>
 
       <Footer />
