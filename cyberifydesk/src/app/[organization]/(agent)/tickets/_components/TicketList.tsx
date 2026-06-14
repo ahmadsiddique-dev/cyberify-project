@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -31,7 +32,14 @@ export interface Ticket {
   createdAt: string
 }
 
-export function TicketList({ initialTickets }: { initialTickets: Ticket[] }) {
+export function TicketList({
+  initialTickets,
+  orgSlug,
+}: {
+  initialTickets: Ticket[]
+  orgSlug: string
+}) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [priorityFilter, setPriorityFilter] = React.useState("all")
@@ -155,6 +163,7 @@ export function TicketList({ initialTickets }: { initialTickets: Ticket[] }) {
                     variant="ghost"
                     size="icon"
                     className="rounded-full size-8"
+                    onClick={() => router.push(`/${orgSlug}/tickets/${ticket._id}`)}
                   >
                     <IconExternalLink className="size-4" />
                   </Button>

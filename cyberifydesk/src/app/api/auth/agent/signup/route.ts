@@ -6,6 +6,7 @@ import { sendOtpEmail } from "@/lib/sendEmail"
 import { NextResponse } from "next/server"
 import { catchAsyncRoute } from "@/lib/catchAsyncRoute"
 import { cookies } from "next/headers"
+import { slugify } from "@/lib/utils"
 
 export const POST = catchAsyncRoute(async (request: Request) => {
   await dbConnect()
@@ -26,16 +27,11 @@ export const POST = catchAsyncRoute(async (request: Request) => {
   }
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString()
 
-  const modifiedOrganizationName = organizationName
-    .split("-")
-    .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ")
-
   const user = new User({
     fullName: name,
     email: email,
     password: password,
-    organization: modifiedOrganizationName,
+    organization: slugify(organizationName) ,
     role: role || "agent",
     otp: generatedOtp,
   })

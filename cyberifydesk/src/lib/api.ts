@@ -26,7 +26,9 @@ api.interceptors.response.use(
         useCustomerStore.getState().clearAuth()
       } else {
         useUserStore.getState().clearAuth()
-        if (typeof window !== "undefined") {
+        const isAuthRequest = error.config?.url?.includes("/api/auth/agent/signin") || error.config?.url?.includes("/api/auth/agent/signup")
+        const isAuthPath = typeof window !== "undefined" && ["/signin", "/signup", "/forgot-password"].some((p) => window.location.pathname.endsWith(p))
+        if (typeof window !== "undefined" && !isAuthRequest && !isAuthPath) {
           window.location.href = "/signin"
         }
       }

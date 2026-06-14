@@ -27,5 +27,5 @@ export function useApi<T, Args extends any[]>(
     [fetcher]
   )
 
-  return { data, loading, error, execute }
-}
+  return { data, setData, loading, error, execute }
+} 

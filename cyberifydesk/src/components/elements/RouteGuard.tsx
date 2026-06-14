@@ -176,7 +176,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
         <BackgroundBlur />
         <div className="z-10 flex flex-col items-center gap-4 py-8 px-12 rounded-2xl border border-border/40 bg-card/30 p-8 shadow-2xl backdrop-blur-md">
           <IconLoader2 className="size-8 animate-spin text-orange-500" />
-          <p className="text-xs text-muted-foreground">Verifying access...</p>
+          <p className="text-xs text-muted-foreground">Loading...</p>
         </div>
       </div>
     )

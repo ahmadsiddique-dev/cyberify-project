@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose"
 export interface IMessage extends Document {
   ticketId: mongoose.Types.ObjectId
   senderId?: mongoose.Types.ObjectId | null 
-  senderType: "user" | "agent" | "ai"
+  senderType: "user" | "agent" | "system"
   message: string
   createdAt: Date
 }
@@ -22,7 +22,7 @@ const MessageSchema: Schema = new Schema<IMessage>(
     },
     senderType: {
       type: String,
-      enum: ["user", "agent", "ai"],
+      enum: ["user", "agent", "system"],
       required: true,
     },
     message: {

@@ -12,7 +12,7 @@ export function catchAsync<T, Args extends any[]>(
     } catch (err) {
       let errorMessage = "Unknown error"
       if (axios.isAxiosError(err)) {
-        errorMessage = err.response?.data?.error || err.message
+        errorMessage = err.response?.data?.error || err.response?.data?.message || err.message
       } else if (err instanceof Error) {
         errorMessage = err.message
       }

@@ -19,7 +19,7 @@ export default async function TicketsPage({ params }: Props) {
       <DashboardHeader title="Tickets Queue" user={user} />
 
       <main className="px-4 py-8 sm:px-6 lg:px-8 flex flex-col gap-8">
-        <TicketList initialTickets={ticketsData as Ticket[]} />
+        <TicketList initialTickets={ticketsData as Ticket[]} orgSlug={organization} />
       </main>
 
       <Footer />

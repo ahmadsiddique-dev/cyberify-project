@@ -58,6 +58,7 @@ export function UserForm() {
     error: ticketError,
     execute: ticketExecute,
     loading: ticketLoading,
+    setData: setTicketData,
   } = useApi(
     React.useCallback(
       (payload: TicketPayloadType) =>
@@ -102,6 +103,7 @@ export function UserForm() {
           </Link>
           <Button
             onClick={() => {
+              setTicketData(null)
               reset()
             }}
             className="mt-6 rounded-full border border-border/80 bg-background px-6 py-2 text-xs font-semibold hover:bg-muted"

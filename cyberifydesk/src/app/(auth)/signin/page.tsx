@@ -16,7 +16,6 @@ import {
   FieldGroup,
   FieldLabel,
   FieldError,
-  FieldDescription,
 } from "@/components/ui/field"
 import {
   InputGroup,
@@ -42,7 +41,6 @@ import { AuthLayout } from "@/components/elements/AuthLayout"
 export default function Page() {
   const [currentStep, setCurrentStep] = React.useState(1)
   const [loginSuccess, setLoginSuccess] = React.useState(false)
-  const [generatedOtp, setGeneratedOtp] = React.useState("")
   const router = useRouter()
   const setAuth = useUserStore((state) => state.setAuth)
   const user = useUserStore((state) => state.user)
@@ -74,7 +72,6 @@ export default function Page() {
   const {
     register,
     handleSubmit,
-    setValue,
     control,
     trigger,
     formState: { errors },
@@ -90,10 +87,7 @@ export default function Page() {
   React.useEffect(() => {
     if (loginSuccess) {
       const orgSlug = user?.organization ? slugify(user.organization) : "default"
-      const timer = setTimeout(() => {
-        router.push(`/${orgSlug}/dashboard`)
-      }, 2000)
-      return () => clearTimeout(timer)
+      router.push(`/${orgSlug}/dashboard`)
     }
   }, [loginSuccess, router, user?.organization])
 

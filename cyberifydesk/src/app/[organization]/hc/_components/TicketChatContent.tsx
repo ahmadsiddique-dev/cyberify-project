@@ -17,7 +17,8 @@ import {
   IconUser,
   IconHeadset,
   IconCalendar,
-  IconAlertCircle
+  IconAlertCircle,
+  IconInfoCircle
 } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
@@ -29,7 +30,12 @@ interface TicketChatContentProps {
 interface MockMessage {
   _id: string
   ticketId: string
-  senderType: "user" | "agent" | "ai"
+  senderId?: {
+    _id: string
+    fullName: string
+    role: string
+  } | null
+  senderType: "user" | "agent" | "system"
   message: string
   createdAt: Date
 }
@@ -43,7 +49,7 @@ export function TicketChatContent({
   const [mounted, setMounted] = React.useState(false)
   const [messages, setMessages] = React.useState<MockMessage[]>([])
   const [input, setInput] = React.useState("")
-  const [isTyping, setIsTyping] = React.useState(false)
+  const [currentStatus, setCurrentStatus] = React.useState("open")
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -87,28 +93,42 @@ export function TicketChatContent({
   }, [ticketData, ticketId])
 
   React.useEffect(() => {
-    if (!ticket) return
-    setMessages([
-      {
-        _id: "init-1",
-        ticketId,
-        senderType: "user",
-        message: ticket.description || "No description provided.",
-        createdAt: new Date(new Date(ticket.createdAt).getTime() - 600000),
-      },
-      {
-        _id: "init-2",
-        ticketId,
-        senderType: "agent",
-        message: `Hello! An agent has been assigned to your ticket "${ticket.title}". How can we help you today?`,
-        createdAt: new Date(ticket.createdAt),
-      }
-    ])
-  }, [ticket, ticketId])
+    if (ticket?.status) {
+      setCurrentStatus(ticket.status)
+    }
+  }, [ticket?.status])
+
+  React.useEffect(() => {
+    if (!isAuthenticated || !ticketId) return
+
+    const fetchMessages = () => {
+      axios.get(`/api/hc/tickets/${ticketId}/messages`)
+        .then((res) => {
+          setMessages(res.data.messages)
+          if (res.data.ticketStatus) {
+            setCurrentStatus(res.data.ticketStatus)
+          }
+        })
+        .catch(() => {})
+    }
+
+    fetchMessages()
+    const interval = setInterval(fetchMessages, 3000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated, ticketId])
+
+  const firstMsg: MockMessage = {
+    _id: "desc-" + (ticket?._id || ""),
+    ticketId,
+    senderType: "user",
+    message: ticket?.description || "No description provided.",
+    createdAt: new Date(ticket?.createdAt || Date.now()),
+  }
+  const chatMessages = ticket ? [firstMsg, ...messages] : []
 
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isTyping])
+  }, [chatMessages])
 
   if (!mounted) {
     return (
@@ -151,11 +171,17 @@ export function TicketChatContent({
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim()) return
+    if (!input.trim() || !user?._id) return
 
+    const tempId = Date.now().toString()
     const userMsg: MockMessage = {
-      _id: Date.now().toString(),
+      _id: tempId,
       ticketId,
+      senderId: {
+        _id: user._id,
+        fullName: user.fullName,
+        role: "user"
+      },
       senderType: "user",
       message: input.trim(),
       createdAt: new Date(),
@@ -163,33 +189,25 @@ export function TicketChatContent({
 
     setMessages((prev) => [...prev, userMsg])
     setInput("")
-    setIsTyping(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 1800))
-
-    const mockResponses = [
-      "I am analyzing the details of this request. Could you please provide any logs or screenshots if available?",
-      "Thank you for the update. I have logged this to our backend and marked it for high priority support.",
-      "An support agent has been assigned to investigate your ticket. They will respond here shortly.",
-      "Understood. We are looking into this issue and will update the status of the ticket as soon as we make progress.",
-    ]
-
-    const agentMsg: MockMessage = {
-      _id: (Date.now() + 1).toString(),
-      ticketId,
-      senderType: "agent",
-      message: mockResponses[Math.floor(Math.random() * mockResponses.length)],
-      createdAt: new Date(),
+    try {
+      await axios.post(`/api/hc/tickets/${ticketId}/messages`, {
+        senderId: user._id,
+        senderType: "user",
+        message: userMsg.message
+      })
+      axios.get(`/api/hc/tickets/${ticketId}/messages`).then((res) => {
+        setMessages(res.data.messages)
+      })
+    } catch (err) {
+      setMessages((prev) => prev.filter((m) => m._id !== tempId))
     }
-
-    setMessages((prev) => [...prev, agentMsg])
-    setIsTyping(false)
   }
 
   return (
     <div className="flex flex-col gap-6 animate-in duration-300 fade-in slide-in-from-bottom-3">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        <div className="lg:col-span-1 flex flex-col h-[520px] gap-5 rounded-2xl border border-border/40 bg-card/30 p-5 shadow-xl backdrop-blur-md overflow-hidden">
+        <div className="lg:col-span-1 flex flex-col h-130 gap-5 rounded-2xl border border-border/40 bg-card/30 p-5 shadow-xl backdrop-blur-md overflow-hidden">
           <div className="flex items-center gap-2 pb-4 border-b border-border/20">
             <Button
               onClick={() => router.push(`/${orgSlug}/hc/tickets`)}
@@ -207,7 +225,14 @@ export function TicketChatContent({
           <div className="flex flex-col gap-3.5 text-2xs mt-1 flex-1 overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground font-semibold">Status</span>
-              <span className="font-bold text-orange-500 capitalize">{ticket.status}</span>
+              <span className={cn(
+                "font-bold capitalize",
+                currentStatus === "open"
+                  ? "text-rose-500"
+                  : currentStatus === "pending"
+                  ? "text-blue-500"
+                  : "text-emerald-500"
+              )}>{currentStatus}</span>
             </div>
 
             <div className="flex items-center justify-between">
@@ -232,21 +257,34 @@ export function TicketChatContent({
           </div>
         </div>
 
-        <div className="lg:col-span-3 flex flex-col h-[520px] rounded-2xl border border-border/40 bg-card/30 shadow-xl backdrop-blur-md overflow-hidden">
+        <div className="lg:col-span-3 flex flex-col h-130 rounded-2xl border border-border/40 bg-card/30 shadow-xl backdrop-blur-md overflow-hidden">
           <div className="px-5 py-3.5 border-b border-border/40 bg-linear-to-r from-orange-600/5 to-amber-500/5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <IconMessageCircle className="size-4.5 text-orange-500" />
               <span className="text-xs font-bold text-foreground">Chat</span>
             </div>
+            <span className={cn(
+              "text-xs font-bold capitalize",
+              currentStatus === "open"
+                ? "text-rose-500"
+                : currentStatus === "pending"
+                ? "text-blue-500"
+                : "text-emerald-500"
+            )}>{currentStatus}</span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 relative [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-              <span className="text-xl font-bold text-foreground/5 tracking-wider uppercase">
-                Ai is not in this Chat
-              </span>
-            </div>
-            {messages.map((msg) => {
+            {chatMessages.map((msg) => {
+              if (msg.senderType === "system") {
+                return (
+                  <div
+                    key={msg._id}
+                    className="self-center my-2 text-[10px] text-muted-foreground/80 bg-muted/30 px-3 py-1.5 rounded-full border border-border/20"
+                  >
+                    {msg.message}
+                  </div>
+                )
+              }
               const isUser = msg.senderType === "user"
               return (
                 <div
@@ -267,7 +305,7 @@ export function TicketChatContent({
                     ) : (
                       <>
                         <IconHeadset className="size-3 text-orange-500" />
-                        <span className="text-orange-500">Agent</span>
+                        <span className="text-orange-500">{msg.senderId?.fullName || "Agent"}</span>
                       </>
                     )}
                   </div>
@@ -282,13 +320,6 @@ export function TicketChatContent({
                 </div>
               )
             })}
-
-            {isTyping && (
-              <div className="self-start flex items-center gap-1.5 rounded-2xl px-4 py-3 text-2xs bg-muted/80 text-muted-foreground rounded-tl-none border border-border/40 animate-pulse z-10">
-                <IconLoader className="size-3.5 animate-spin" />
-                <span>Support team is typing...</span>
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -299,6 +330,7 @@ export function TicketChatContent({
             <textarea
               ref={textareaRef}
               value={input}
+              disabled={currentStatus === "close"}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -307,13 +339,14 @@ export function TicketChatContent({
                 }
               }}
               rows={1}
-              placeholder="Write a message regarding this ticket..."
-              className="flex-1 px-4 py-2.5 rounded-xl border border-border/40 bg-background/50 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder:text-muted-foreground/60 resize-none max-h-36 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full"
+              placeholder={currentStatus === "close" ? "This ticket is closed." : "Write a message regarding this ticket..."}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-border/40 bg-background/50 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder:text-muted-foreground/60 resize-none max-h-36 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full disabled:opacity-50 disabled:bg-muted/10"
             />
             <Button
               type="submit"
               size="icon"
-              className="size-9 rounded-xl bg-linear-to-r from-orange-600 to-amber-500 text-white hover:from-orange-500 hover:to-amber-400 hover:scale-105 active:scale-95 transition-all shadow-md shadow-orange-500/10"
+              disabled={!input.trim() || currentStatus === "close"}
+              className="size-9 rounded-xl bg-linear-to-r from-orange-600 to-amber-500 text-white hover:from-orange-500 hover:to-amber-400 hover:scale-105 active:scale-95 transition-all shadow-md shadow-orange-500/10 disabled:opacity-50 disabled:scale-100 disabled:pointer-events-none"
             >
               <IconSend className="size-4" />
             </Button>
