@@ -59,7 +59,7 @@ const worker = new Worker(
             batch,
             embeddings,
             {
-              url: "http://localhost:6333",
+              url: process.env.QDRANT_URL || "http://localhost:6333",
               collectionName: "pdf-docs",
             },
           );
@@ -82,8 +82,8 @@ const worker = new Worker(
   {
     concurrency: 100,
     connection: {
-      host: "localhost",
-      port: 6379,
+      host: process.env.REDIS_HOST || "localhost",
+      port: parseInt(process.env.REDIS_PORT || "6379", 10),
     },
   },
 );

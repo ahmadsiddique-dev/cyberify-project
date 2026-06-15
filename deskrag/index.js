@@ -8,8 +8,8 @@ import { getEmbeddingsClient } from "./src/embeddings.js";
 
 const queue = new Queue("data-upload-queue", {
   connection: {
-    host: "localhost",
-    port: 6379,
+    host: process.env.REDIS_HOST || "localhost",
+    port: parseInt(process.env.REDIS_PORT || "6379", 10),
   },
 });
 
@@ -30,7 +30,26 @@ const upload = multer({
 
 const app = express();
 const PORT = process.env.PORT || 7000;
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGIN || "*",
+  })
+);
+
+const apiAuth = (req, res, next) => {
+  const secretKey = process.env.DESKRAG_API_KEY;
+  if (!secretKey) {
+    return next();
+  }
+  const authHeader = req.headers["authorization"] || req.headers["x-api-key"];
+  if (
+    authHeader === secretKey ||
+    (authHeader && authHeader.replace("Bearer ", "") === secretKey)
+  ) {
+    return next();
+  }
+  res.status(401).json({ error: "Unauthorized" });
+};
 
 app.get("/", (req, res) => {
   res.send(`Server is up and running`);
@@ -38,6 +57,7 @@ app.get("/", (req, res) => {
 
 app.post(
   "/upload/file",
+  apiAuth,
   upload.single("file"),
   async function (req, res, next) {
     const job = await queue.add("file-ready", {
@@ -49,7 +69,7 @@ app.post(
   },
 );
 
-app.get("/upload/status/:jobId", async (req, res) => {
+app.get("/upload/status/:jobId", apiAuth, async (req, res) => {
   const { jobId } = req.params;
   const job = await queue.getJob(jobId);
   if (!job) {
@@ -59,7 +79,7 @@ app.get("/upload/status/:jobId", async (req, res) => {
   res.json({ status: state });
 });
 
-app.get("/chat", async (req, res) => {
+app.get("/chat", apiAuth, async (req, res) => {
   const userQuery = req.query.userQuery;
 
   const embeddings = getEmbeddingsClient();
@@ -67,7 +87,7 @@ app.get("/chat", async (req, res) => {
   const vectorStore = await QdrantVectorStore.fromExistingCollection(
     embeddings,
     {
-      url: "http://localhost:6333",
+      url: process.env.QDRANT_URL || "http://localhost:6333",
       collectionName: "pdf-docs",
     },
   );
@@ -109,6 +129,20 @@ User Query: ${userQuery}`;
   res.send({ result: { text: replyText } });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+});
+
+process.on("SIGTERM", () => {
+  server.close(async () => {
+    await queue.close();
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  server.close(async () => {
+    await queue.close();
+    process.exit(0);
+  });
 });

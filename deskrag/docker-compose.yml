@@ -3,13 +3,52 @@ services:
     image: valkey/valkey
     ports:
       - 6379:6379
-    # volumes:
-    #   - ./valkey_data:/data
+    volumes:
+      - valkey_data:/data
 
   qdrant:
     image: qdrant/qdrant
     ports:
       - 6333:6333
-    #   - 6334:6334
-    # volumes:
-    #   - ./qdrant_storage:/qdrant/storage
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  api:
+    build: .
+    command: node index.js
+    ports:
+      - 7000:7000
+    depends_on:
+      - valkey
+      - qdrant
+    environment:
+      - PORT=7000
+      - REDIS_HOST=valkey
+      - REDIS_PORT=6379
+      - QDRANT_URL=http://qdrant:6333
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
+      - DESKRAG_API_KEY=${DESKRAG_API_KEY}
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
+    volumes:
+      - ./uploads:/app/uploads
+
+  worker:
+    build: .
+    command: node worker.js
+    depends_on:
+      - valkey
+      - qdrant
+    environment:
+      - REDIS_HOST=valkey
+      - REDIS_PORT=6379
+      - QDRANT_URL=http://qdrant:6333
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  valkey_data:
+  qdrant_storage:

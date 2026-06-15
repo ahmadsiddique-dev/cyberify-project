@@ -167,7 +167,7 @@ export function ChatWidget() {
             {isTyping && (
               <div className="text-2xs flex animate-pulse items-center gap-1.5 self-start rounded-2xl rounded-tl-none border border-border/40 bg-muted/80 px-3 py-2 text-muted-foreground">
                 <IconLoader className="size-3.5 animate-spin" />
-                <span>Agent is typing...</span>
+                <span>Generating response...</span>
               </div>
             )}
             <div ref={chatEndRef} />

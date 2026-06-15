@@ -1,0 +1,9 @@
+node_modules
+uploads
+valkey_data
+qdrant_storage
+.env
+.git
+.gitignore
+docker-compose.yml
+Dockerfile
