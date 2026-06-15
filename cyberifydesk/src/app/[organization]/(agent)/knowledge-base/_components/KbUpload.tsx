@@ -20,6 +20,7 @@ export function KbUpload() {
   const [dragActive, setDragActive] = React.useState(false)
   const [localError, setLocalError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
+  const [processing, setProcessing] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const uploadUrl = "http://localhost:7000/upload/file"
@@ -36,6 +37,13 @@ export function KbUpload() {
     }, [])
   )
 
+
+  React.useEffect(() => {
+    if (!file && fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }, [file])
+
   const validateAndSetFile = (selectedFile: File) => {
     setLocalError(null)
     setSuccess(false)
@@ -47,6 +55,12 @@ export function KbUpload() {
     if (!isPdf && !isTxt) {
       setLocalError("Only PDF and TXT files are allowed.")
       setFile(null)
+      return
+    }
+
+    if (selectedFile.size > 150 * 1024) {
+      setLocalError("File size exceeds the 150KB limit.")
+      setFile(null)                             
       return
     }
 
@@ -87,9 +101,29 @@ export function KbUpload() {
   const handleUpload = async () => {
     if (!file) return
     const result = await uploadFile(file)
-    if (result) {
-      setSuccess(true)
-      setFile(null)
+    if (result && result.jobId) {
+      setProcessing(true)
+      const jobId = result.jobId
+      const interval = setInterval(async () => {
+        try {
+          const res = await axios.get(`http://localhost:7000/upload/status/${jobId}`)
+          if (res.data.status === "completed") {
+            clearInterval(interval)
+            setProcessing(false)
+            setSuccess(true)
+            setFile(null)
+          } else if (res.data.status === "failed") {
+            clearInterval(interval)
+            setProcessing(false)
+            setLocalError("File processing failed. Try again")
+            setFile(null)
+          }
+        } catch (err) {
+          clearInterval(interval)
+          setProcessing(false)
+          setLocalError("Failed to check status")
+        }
+      }, 2000)
     }
   }
 
@@ -97,6 +131,7 @@ export function KbUpload() {
     setFile(null)
     setLocalError(null)
     setSuccess(false)
+    setProcessing(false)
     setData(null)
   }
 
@@ -195,6 +230,15 @@ export function KbUpload() {
           </div>
         )}
 
+        {processing && (
+          <div className="flex items-start gap-3 p-3.5 rounded-xl border border-orange-500/20 bg-orange-500/5 text-xs text-orange-500 animate-in fade-in duration-200">
+            <IconLoader className="size-4 shrink-0 mt-0.5 animate-spin" />
+            <div className="flex-1 min-w-0 leading-relaxed font-medium">
+              Processing and vector indexing in progress...
+            </div>
+          </div>
+        )}
+
         {success && (
           <div className="flex items-start gap-3 p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-xs text-emerald-500 animate-in fade-in duration-200">
             <IconCheck className="size-4 shrink-0 mt-0.5" />
@@ -213,13 +257,18 @@ export function KbUpload() {
         {file && (
           <Button
             onClick={handleUpload}
-            disabled={loading}
+            disabled={loading || processing}
             className="w-full h-10 rounded-xl bg-linear-to-r from-orange-600 to-amber-500 text-white font-bold hover:from-orange-500 hover:to-amber-400 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-md shadow-orange-500/10 disabled:opacity-50 disabled:scale-100 disabled:pointer-events-none"
           >
             {loading ? (
               <>
                 <IconLoader className="mr-2 size-4.5 animate-spin" />
                 <span>Uploading...</span>
+              </>
+            ) : processing ? (
+              <>
+                <IconLoader className="mr-2 size-4.5 animate-spin" />
+                <span>Processing...</span>
               </>
             ) : (
               <span>Upload Document</span>

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Worker } from "bullmq";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { getEmbeddingsClient } from "./src/embeddings.js";
@@ -70,10 +71,3 @@ const worker = new Worker(
   },
 );
 
-worker.on("completed", (job) => {
-  console.log(`File processed successfully`);
-});
-
-worker.on("failed", (job, err) => {
-  console.log(`File processing failed. Try again`);
-});

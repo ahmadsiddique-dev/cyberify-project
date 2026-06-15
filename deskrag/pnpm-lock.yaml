@@ -13,7 +13,7 @@ importers:
         version: 2.8.0
       '@langchain/community':
         specifier: ^1.1.28
-        version: 1.1.29(@browserbasehq/sdk@2.14.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@16.4.5)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3))(@ibm-cloud/watsonx-ai@1.7.14)(@langchain/core@1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(google-auth-library@10.7.0)(ibm-cloud-sdk-core@5.4.20)(ioredis@5.10.1)(jsonwebtoken@9.0.3)(lodash@4.18.1)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(pdf-parse@2.4.5)(playwright@1.60.0)(ws@8.21.0)
+        version: 1.1.29(@browserbasehq/sdk@2.14.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@17.4.2)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3))(@ibm-cloud/watsonx-ai@1.7.14)(@langchain/core@1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(@qdrant/js-client-rest@1.18.0(typescript@6.0.3))(google-auth-library@10.7.0)(ibm-cloud-sdk-core@5.4.20)(ioredis@5.10.1)(jsonwebtoken@9.0.3)(lodash@4.18.1)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(pdf-parse@2.4.5)(playwright@1.60.0)(ws@8.21.0)
       '@langchain/core':
         specifier: ^1.1.48
         version: 1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0)
@@ -26,12 +26,18 @@ importers:
       '@langchain/textsplitters':
         specifier: ^1.0.1
         version: 1.0.1(@langchain/core@1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))
+      '@qdrant/js-client-rest':
+        specifier: ^1.18.0
+        version: 1.18.0(typescript@6.0.3)
       bullmq:
         specifier: ^5.77.3
         version: 5.78.1
       cors:
         specifier: ^2.8.6
         version: 2.8.6
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       express:
         specifier: ^5.2.1
         version: 5.2.1
@@ -880,6 +886,10 @@ packages:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
 
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+    engines: {node: '>=12'}
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -1602,13 +1612,13 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@browserbasehq/stagehand@1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@16.4.5)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3)':
+  '@browserbasehq/stagehand@1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@17.4.2)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.27.3
       '@browserbasehq/sdk': 2.14.0
       '@playwright/test': 1.60.0
       deepmerge: 4.3.1
-      dotenv: 16.4.5
+      dotenv: 17.4.2
       openai: 6.42.0(ws@8.21.0)(zod@4.4.3)
       ws: 8.21.0
       zod: 4.4.3
@@ -1662,9 +1672,9 @@ snapshots:
       - openai
       - ws
 
-  '@langchain/community@1.1.29(@browserbasehq/sdk@2.14.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@16.4.5)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3))(@ibm-cloud/watsonx-ai@1.7.14)(@langchain/core@1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(google-auth-library@10.7.0)(ibm-cloud-sdk-core@5.4.20)(ioredis@5.10.1)(jsonwebtoken@9.0.3)(lodash@4.18.1)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(pdf-parse@2.4.5)(playwright@1.60.0)(ws@8.21.0)':
+  '@langchain/community@1.1.29(@browserbasehq/sdk@2.14.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@17.4.2)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3))(@ibm-cloud/watsonx-ai@1.7.14)(@langchain/core@1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(@qdrant/js-client-rest@1.18.0(typescript@6.0.3))(google-auth-library@10.7.0)(ibm-cloud-sdk-core@5.4.20)(ioredis@5.10.1)(jsonwebtoken@9.0.3)(lodash@4.18.1)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(pdf-parse@2.4.5)(playwright@1.60.0)(ws@8.21.0)':
     dependencies:
-      '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@16.4.5)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3)
+      '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.60.0)(deepmerge@4.3.1)(dotenv@17.4.2)(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(zod@4.4.3)
       '@ibm-cloud/watsonx-ai': 1.7.14
       '@langchain/classic': 1.0.34(@langchain/core@1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0))(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0)
       '@langchain/core': 1.1.49(openai@6.42.0(ws@8.21.0)(zod@4.4.3))(ws@8.21.0)
@@ -1680,6 +1690,7 @@ snapshots:
       zod: 4.4.3
     optionalDependencies:
       '@browserbasehq/sdk': 2.14.0
+      '@qdrant/js-client-rest': 1.18.0(typescript@6.0.3)
       google-auth-library: 10.7.0
       ioredis: 5.10.1
       jsonwebtoken: 9.0.3
@@ -2051,6 +2062,8 @@ snapshots:
     optional: true
 
   dotenv@16.4.5: {}
+
+  dotenv@17.4.2: {}
 
   dunder-proto@1.0.1:
     dependencies:

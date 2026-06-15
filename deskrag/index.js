@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import multer from "multer";
@@ -27,7 +28,10 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 150 * 1024 }
+});
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -37,14 +41,23 @@ app.get("/", (req, res) => {
   res.send(`Server is up and running`);
 });
 
-app.post("/upload/file", upload.single("file"), function (req, res, next) {
-
-  queue.add("file-ready", {
+app.post("/upload/file", upload.single("file"), async function (req, res, next) {
+  const job = await queue.add("file-ready", {
     filename: req.file.filename,
     destination: req.file.destination,
     path: req.file.path,
   });
-  res.send("File uploaded successfully!");
+  res.json({ message: "File uploaded successfully!", jobId: job.id });
+});
+
+app.get("/upload/status/:jobId", async (req, res) => {
+  const { jobId } = req.params;
+  const job = await queue.getJob(jobId);
+  if (!job) {
+    return res.status(404).json({ status: "not_found" });
+  }
+  const state = await job.getState();
+  res.json({ status: state });
 });
 
 app.get("/chat", async (req, res) => {
