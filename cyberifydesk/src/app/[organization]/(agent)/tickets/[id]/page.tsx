@@ -21,7 +21,7 @@ export default async function TicketDetailsPage({
   if (!ticket) {
     return (
       <div className="relative flex min-h-screen flex-col bg-background font-sans text-foreground transition-colors duration-300">
-        <BackgroundBlur />
+        {/* <BackgroundBlur /> */}
         <DashboardHeader title="Ticket Details" user={user} />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8 flex items-center justify-center">
           <div className="flex flex-col items-center justify-center min-h-75 gap-4 rounded-2xl border border-border/40 bg-card/30 p-8 text-center backdrop-blur-md max-w-md">
@@ -45,7 +45,7 @@ export default async function TicketDetailsPage({
 
   return (
     <div className="relative flex min-h-screen flex-col bg-background font-sans text-foreground transition-colors duration-300">
-      <BackgroundBlur />
+      {/* <BackgroundBlur /> */}
       <DashboardHeader title="Ticket Workspace" user={user} />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
