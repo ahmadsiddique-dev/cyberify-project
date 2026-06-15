@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useUserStore } from "@/store/user"
 import axios from "axios"
+import { getAiResponse } from "../_lib/get_ai_response"
 
 interface MockMessage {
   _id: string
@@ -48,6 +49,7 @@ export function TicketChatArea({
   const [messages, setMessages] = React.useState<MockMessage[]>([])
   const [input, setInput] = React.useState("")
   const [currentStatus, setCurrentStatus] = React.useState(ticketStatus)
+  const [aiLoading, setAiLoading] = React.useState(false)
   const messagesEndRef = React.useRef<HTMLDivElement>(null)
   const textareaRef = React.useRef<HTMLTextAreaElement>(null)
 
@@ -143,6 +145,18 @@ export function TicketChatArea({
     }
   }
 
+  const handleAiResponse = async () => {
+    if (aiLoading) return
+    setAiLoading(true)
+    try {
+      const aiResponse = await getAiResponse(chatMessages, ticketTitle)
+      setInput(aiResponse)
+    } catch (err) {
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   return (
     <div className="flex flex-col h-137.5 rounded-2xl border border-border/40 bg-card/30 shadow-xl backdrop-blur-md overflow-hidden">
       <div className="px-5 py-3.5 border-b border-border/40 bg-linear-to-r from-orange-600/5 to-amber-500/5 flex items-center justify-between">
@@ -227,11 +241,16 @@ export function TicketChatArea({
             className="flex-1 pl-4 pr-10 py-2.5 rounded-xl border border-border/40 bg-background/50 text-xs focus:outline-hidden focus:ring-1 focus:ring-orange-500 focus:border-orange-500 transition-all placeholder:text-muted-foreground/60 resize-none max-h-36 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-foreground/10 [&::-webkit-scrollbar-thumb]:rounded-full disabled:opacity-50 disabled:bg-muted/10"
           />
           <button
+            onClick={handleAiResponse}
             type="button"
-            disabled={currentStatus === "close"}
+            disabled={currentStatus === "close" || aiLoading}
             className="absolute right-3 bottom-2.5 text-muted-foreground hover:text-orange-500 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
-            <IconSparkles className="size-4" />
+            {aiLoading ? (
+              <IconLoader className="size-4 animate-spin" />
+            ) : (
+              <IconSparkles className="size-4" />
+            )}
           </button>
         </div>
         <Button

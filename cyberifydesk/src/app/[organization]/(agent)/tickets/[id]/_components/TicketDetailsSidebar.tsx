@@ -19,19 +19,14 @@ interface TicketDetailsSidebarProps {
     createdAt: string
     description?: string
   }
+  insight: {
+    summary: string
+    rootCause: string
+    solution: string
+  }
 }
 
-const mockAiInsight = {
-  summary: "The customer is unable to access the support portal or authenticate successfully. This is blocking their ability to view or track their active tickets.",
-  rootCause: "A misconfiguration or invalid check in the login request validation handler on the server (e.g. incorrect role payload verification or status mismatch).",
-  solution: [
-    "Verify the customer's email status in the database to ensure the verification code (OTP) check passed.",
-    "Examine the 'X-Role' header parameter mapping in the authentication request routing to verify role parsing.",
-    "Ensure client-side state correctly retrieves the active accessToken."
-  ]
-}
-
-export function TicketDetailsSidebar({ orgSlug, ticket }: TicketDetailsSidebarProps) {
+export function TicketDetailsSidebar({ orgSlug, ticket, insight }: TicketDetailsSidebarProps) {
   const router = useRouter()
   const [activeTab, setActiveTab] = React.useState<"details" | "ai-insight">("details")
 
@@ -144,25 +139,21 @@ export function TicketDetailsSidebar({ orgSlug, ticket }: TicketDetailsSidebarPr
               <div className="flex flex-col gap-1">
                 <span className="text-orange-500 font-bold tracking-wide uppercase text-sm">Summary</span>
                 <p className="text-foreground leading-relaxed font-medium">
-                  {mockAiInsight.summary}
+                  {insight.summary}
                 </p>
               </div>
 
               <div className="flex flex-col gap-1 border-t border-border/20 pt-3">
                 <span className="text-orange-500 font-bold tracking-wide uppercase text-sm">Root Cause</span>
                 <p className="text-foreground leading-relaxed font-medium">
-                  {mockAiInsight.rootCause}
+                  {insight.rootCause}
                 </p>
               </div>
 
               <div className="flex flex-col gap-1.5 border-t border-border/20 pt-3">
                 <span className="text-orange-500 font-bold tracking-wide uppercase text-sm">Suggested Solutions</span>
                 <ol className="list-decimal pl-3.5 flex flex-col gap-2 text-foreground font-medium">
-                  {mockAiInsight.solution.map((sol, index) => (
-                    <li key={index} className="leading-relaxed">
-                      {sol}
-                    </li>
-                  ))}
+                  {insight.solution}
                 </ol>
               </div>
             </div>

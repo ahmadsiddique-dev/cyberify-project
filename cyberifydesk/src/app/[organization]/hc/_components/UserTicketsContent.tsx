@@ -46,6 +46,7 @@ export function UserTicketsContent({
   const [editingTicket, setEditingTicket] = React.useState<any | null>(null)
   const user = useCustomerStore((state) => state.user)
   const [mounted, setMounted] = React.useState(false)
+  const [deletingTicketId, setDeletingTicketId] = React.useState<string | null>(null)
 
   const params = useParams()
   const router = useRouter()
@@ -62,6 +63,21 @@ export function UserTicketsContent({
       []
     )
   )
+
+  const { execute: deleteTicketExecute } = useApi(
+    React.useCallback(
+      (id: string) =>
+        axios.delete("/api/hc/delete-ticket", { params: { id } }).then((res) => res.data),
+      []
+    )
+  )
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    const res = await deleteTicketExecute(ticketId)
+    if (res && user?._id && orgSlug) {
+      ticketExecute({ customer: user._id, organization: orgSlug })
+    }
+  }
 
   const isAuthenticated = !!accessToken && !!user?._id
 
@@ -206,7 +222,7 @@ export function UserTicketsContent({
                     {formatDate(ticket.createdAt)}
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                    <Popover>
+                    <Popover onOpenChange={(open) => { if (!open) setDeletingTicketId(null) }}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
@@ -216,24 +232,53 @@ export function UserTicketsContent({
                           <IconDots className="size-4 text-muted-foreground" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-32 p-1.5 flex flex-col rounded-xl border border-border/40 bg-card/95 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-1 duration-200" align="end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingTicket(ticket)}
-                          className="w-full justify-between text-2xs h-8 px-2.5 rounded-lg text-foreground hover:bg-muted/60 font-semibold"
-                        >
-                          <span>Edit</span>
-                          <IconPencil className="size-3.5 text-muted-foreground" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-between text-2xs h-8 px-2.5 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive font-semibold"
-                        >
-                          <span>Delete</span>
-                          <IconTrash className="size-3.5" />
-                        </Button>
+                      <PopoverContent className="w-36 p-2 flex flex-col gap-1.5 rounded-xl border border-border/40 bg-card/95 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-1 duration-200" align="end">
+                        {deletingTicketId === ticket._id ? (
+                          <div className="flex flex-col gap-1.5 text-center">
+                            <span className="text-3xs font-bold text-foreground">Confirm Delete?</span>
+                            <div className="flex gap-1.5 justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDeletingTicketId(null)}
+                                className="h-6 text-3xs px-2.5 rounded-md border-border/60 hover:bg-muted font-medium"
+                              >
+                                No
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setDeletingTicketId(null)
+                                  handleDeleteTicket(ticket._id)
+                                }}
+                                className="h-6 text-3xs px-2.5 rounded-md bg-linear-to-r from-orange-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 font-semibold text-white shadow-sm"
+                              >
+                                Yes
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingTicket(ticket)}
+                              className="w-full justify-between text-2xs h-8 px-2.5 rounded-lg text-foreground hover:bg-muted/60 font-semibold"
+                            >
+                              <span>Edit</span>
+                              <IconPencil className="size-3.5 text-muted-foreground" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeletingTicketId(ticket._id)}
+                              className="w-full justify-between text-2xs h-8 px-2.5 rounded-lg text-destructive hover:bg-destructive/10 hover:text-destructive font-semibold"
+                            >
+                              <span>Delete</span>
+                              <IconTrash className="size-3.5" />
+                            </Button>
+                          </>
+                        )}
                       </PopoverContent>
                     </Popover>
                   </TableCell>

@@ -8,3 +8,4 @@
 [ ] Sepreate the summary, rootcase and solution suggestion from ticket submission creation beacuse it delays.
 [ ] Fix scroll behaviour in chat window that takes us down chat every time
 [ ] HC Signin filling otp automatically bug
+[ ] Wrong password Error not showing in signup for agent
