@@ -23,7 +23,7 @@ export function KbUpload() {
   const [processing, setProcessing] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  const uploadUrl = "http://localhost:7000/upload/file"
+  const uploadUrl = `${process.env.NEXT_PUBLIC_DESKRAG_URI}/upload/file`
   const { loading, error: apiError, execute: uploadFile, setData } = useApi(
     React.useCallback(async (uploadingFile: File) => {
       const formData = new FormData()
@@ -106,7 +106,7 @@ export function KbUpload() {
       const jobId = result.jobId
       const interval = setInterval(async () => {
         try {
-          const res = await axios.get(`http://localhost:7000/upload/status/${jobId}`)
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_DESKRAG_URI}/upload/status/${jobId}`)
           if (res.data.status === "completed") {
             clearInterval(interval)
             setProcessing(false)
