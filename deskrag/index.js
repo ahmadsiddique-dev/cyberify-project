@@ -109,7 +109,7 @@ User Query: ${userQuery}`;
       Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "google/gemini-3-flash-preview:free",
       messages: [
         {
           role: "user",
