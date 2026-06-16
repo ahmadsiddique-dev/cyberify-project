@@ -4,11 +4,9 @@ import cors from "cors";
 import multer from "multer";
 import { Queue } from "bullmq";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { GoogleGenAI } from "@google/genai";
 import { getEmbeddingsClient } from "./src/embeddings.js";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
-
+// Making Queue
 const queue = new Queue("data-upload-queue", {
   connection: {
     host: process.env.REDIS_HOST || "localhost",
@@ -16,6 +14,7 @@ const queue = new Queue("data-upload-queue", {
   },
 });
 
+// Oh! come on, you know it
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
@@ -31,6 +30,7 @@ const upload = multer({
   limits: { fileSize: 250 * 1024 },
 });
 
+// Making app now
 const app = express();
 const PORT = process.env.PORT || 7000;
 app.use(
@@ -39,28 +39,12 @@ app.use(
   }),
 );
 
-const apiAuth = (req, res, next) => {
-  const secretKey = process.env.DESKRAG_API_KEY;
-  if (!secretKey) {
-    return next();
-  }
-  const authHeader = req.headers["authorization"] || req.headers["x-api-key"];
-  if (
-    authHeader === secretKey ||
-    (authHeader && authHeader.replace("Bearer ", "") === secretKey)
-  ) {
-    return next();
-  }
-  res.status(401).json({ error: "Unauthorized" });
-};
-
 app.get("/", (req, res) => {
-  res.send(`Server is up and running`);
+  res.send(`Server is up and running..`);
 });
 
 app.post(
   "/upload/file",
-  apiAuth,
   upload.single("file"),
   async function (req, res, next) {
     const job = await queue.add("file-ready", {
@@ -72,7 +56,8 @@ app.post(
   },
 );
 
-app.get("/upload/status/:jobId", apiAuth, async (req, res) => {
+// Actually a little useful for Message adn loader on Frontend
+app.get("/upload/status/:jobId", async (req, res) => {
   const { jobId } = req.params;
   const job = await queue.getJob(jobId);
   if (!job) {
@@ -82,10 +67,11 @@ app.get("/upload/status/:jobId", apiAuth, async (req, res) => {
   res.json({ status: state });
 });
 
-app.get("/chat", apiAuth, async (req, res) => {
+// You also would like your customer to talk to the AI Assistant based on your provided Knowledge
+app.get("/chat", async (req, res) => {
   const userQuery = req.query.userQuery;
 
-  const embeddings = getEmbeddingsClient();
+  const embeddings = getEmbeddingsClient(); // I kept its(Embeddings) Logic separate
 
   const vectorStore = await QdrantVectorStore.fromExistingCollection(
     embeddings,
@@ -97,6 +83,7 @@ app.get("/chat", apiAuth, async (req, res) => {
 
   const similaritySearchResults = await vectorStore.similaritySearch(userQuery);
 
+  console.log("Similarity search results: ", similaritySearchResults);
   const context = similaritySearchResults
     .map((doc) => doc.pageContent)
     .join("\n\n");
@@ -107,12 +94,37 @@ ${context}
 
 User Query: ${userQuery}`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-  });
+  const response = await fetch(
+    "https://api.cloudflare.com/client/v4/accounts/1b90534e12e3ecba51a0e9df46a6a827/ai/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+      },
+      body: JSON.stringify({
+        model: "@cf/openai/gpt-oss-120b",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        max_tokens: 1000,
+      }),
+    },
+  );
+  
+  if (!response.ok) {
+    return res
+      .status(response.status)
+      .send({
+        error: `Error: ${response.status} ${response.statusText}`,
+      });
+  }
 
-  const replyText = response.text;
+  const json = await response.json();
+  const replyText = json.choices[0].message.content;
   console.log("Reply text: ", replyText);
   res.send({ result: { text: replyText } });
 });
@@ -121,16 +133,3 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-process.on("SIGTERM", () => {
-  server.close(async () => {
-    await queue.close();
-    process.exit(0);
-  });
-});
-
-process.on("SIGINT", () => {
-  server.close(async () => {
-    await queue.close();
-    process.exit(0);
-  });
-});

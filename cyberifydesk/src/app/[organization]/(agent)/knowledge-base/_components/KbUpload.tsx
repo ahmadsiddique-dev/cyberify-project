@@ -31,7 +31,6 @@ export function KbUpload() {
       const res = await axios.post(uploadUrl, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          "x-api-key": process.env.NEXT_PUBLIC_DESKRAG_API_KEY || "",
         },
       })
       return res.data
@@ -107,11 +106,7 @@ export function KbUpload() {
       const jobId = result.jobId
       const interval = setInterval(async () => {
         try {
-          const res = await axios.get(`${process.env.NEXT_PUBLIC_DESKRAG_URI}/upload/status/${jobId}`, {
-            headers: {
-              "x-api-key": process.env.NEXT_PUBLIC_DESKRAG_API_KEY || "",
-            },
-          })
+          const res = await axios.get(`${process.env.NEXT_PUBLIC_DESKRAG_URI}/upload/status/${jobId}`)
           if (res.data.status === "completed") {
             clearInterval(interval)
             setProcessing(false)

@@ -12,7 +12,7 @@ const worker = new Worker(
   "data-upload-queue",
   async (job) => {
     const data = JSON.parse(JSON.stringify(job.data));
-    console.log("File Data: ", data);
+    console.log("Data: ", data);
     let docs = [];
     if (data.path.endsWith(".txt")) {
       const text = fs.readFileSync(data.path, "utf-8");
@@ -26,11 +26,11 @@ const worker = new Worker(
       const loader = new PDFLoader(data.path);
       docs = await loader.load();
     }
-
+ 
     console.log("File Loaded");
 
     const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 10000,
+      chunkSize: 10000, // I know, Iknow it's too huge
       chunkOverlap: 100,
     });
 
@@ -46,7 +46,7 @@ const worker = new Worker(
 
     try {
       const embeddings = getEmbeddingsClient();
-      console.log("Embeddings", embeddings);
+      console.log("Embeddings Client Created");
 
       let vectorStore;
       const batchSize = 25;

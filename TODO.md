@@ -1,5 +1,3 @@
-[ ] Email work to do
-[ ] Change color of Status in the topbar of chat
 [ ] If email is unverified then it can be taken by anyone else
 [ ] Demo video
 [ ] Remove unused Item from the sidebar

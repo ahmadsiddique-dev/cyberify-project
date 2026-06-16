@@ -22,9 +22,15 @@ export const POST = catchAsyncRoute(async (request: Request) => {
 
   const userExist = await User.findOne({ email })
 
+
+  // If User Exists but is unverified then this email can be used by someone else
   if (userExist) {
-    return NextResponse.json({ error: "Agent already exists" }, { status: 400 })
+    if (userExist.isVerified) {
+      return NextResponse.json({ error: "Agent already exists" }, { status: 400 })
+    }
+    await User.deleteOne({ email })
   }
+
   const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString()
 
   const user = new User({

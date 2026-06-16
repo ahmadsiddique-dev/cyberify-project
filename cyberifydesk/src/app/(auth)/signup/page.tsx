@@ -387,9 +387,9 @@ export default function Page() {
               )}
             </FieldGroup>
 
-            {apiError && (
+            {(currentStep === 1 ? apiError : verifyError) && (
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
-                {apiError}
+                {currentStep === 1 ? apiError : verifyError}
               </div>
             )}
 
@@ -428,10 +428,10 @@ export default function Page() {
               ) : (
                 <Button
                   type="submit"
-                  disabled={apiLoading}
+                  disabled={verifyLoading}
                   className="grow rounded-full bg-linear-to-r from-orange-600 to-amber-500 py-5 font-semibold text-white shadow-md shadow-orange-500/10 hover:from-orange-500 hover:to-amber-400"
                 >
-                  {apiLoading ? (
+                  {verifyLoading ? (
                     <>
                       <IconLoader2 className="size-4 animate-spin" />
                       <span>Creating Space...</span>

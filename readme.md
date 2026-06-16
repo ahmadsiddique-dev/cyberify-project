@@ -45,7 +45,6 @@ Copy `.env.example` to `.env` and fill in the values:
 RESEND_API_KEY=your_resend_api_key
 MONGODB_URI=your_mongodb_connection_string
 DESKRAG_URI=http://localhost:7000
-JWT_SECRET=your_jwt_secret
 ACCESS_TOKEN_SECRET=your_access_token_secret
 ACCESS_TOKEN_EXPIRY=1d
 REFRESH_TOKEN_SECRET=your_refresh_token_secret

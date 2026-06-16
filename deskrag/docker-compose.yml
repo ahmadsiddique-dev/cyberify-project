@@ -26,11 +26,10 @@ services:
       - REDIS_HOST=valkey
       - REDIS_PORT=6379
       - QDRANT_URL=http://qdrant:6333
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
-      - DESKRAG_API_KEY=${DESKRAG_API_KEY}
       - ALLOWED_ORIGIN=${ALLOWED_ORIGIN}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - CLOUDFLARE_ACCOUNTID=${CLOUDFLARE_ACCOUNTID}
     volumes:
       - ./uploads:/app/uploads
 
@@ -44,8 +43,8 @@ services:
       - REDIS_HOST=valkey
       - REDIS_PORT=6379
       - QDRANT_URL=http://qdrant:6333
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN} # I actually dont know are both needed here? but that is fine
+      - CLOUDFLARE_ACCOUNTID=${CLOUDFLARE_ACCOUNTID} 
     volumes:
       - ./uploads:/app/uploads
 

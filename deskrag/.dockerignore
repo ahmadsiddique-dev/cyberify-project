@@ -7,3 +7,4 @@ qdrant_storage
 .gitignore
 docker-compose.yml
 Dockerfile
+my_browser_history
