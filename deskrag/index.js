@@ -4,7 +4,10 @@ import cors from "cors";
 import multer from "multer";
 import { Queue } from "bullmq";
 import { QdrantVectorStore } from "@langchain/qdrant";
+import { GoogleGenAI } from "@google/genai";
 import { getEmbeddingsClient } from "./src/embeddings.js";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
 
 const queue = new Queue("data-upload-queue", {
   connection: {
@@ -104,37 +107,12 @@ ${context}
 
 User Query: ${userQuery}`;
 
-  const response = await fetch(
-    "https://ai.hackclub.com/proxy/v1/chat/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        max_tokens: 1000,
-      }),
-    },
-  );
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
 
-  if (!response.ok) {
-    return res
-      .status(response.status)
-      .send({
-        error: `Hack Club AI chat error: ${response.status} ${response.statusText}`,
-      });
-  }
-
-  const json = await response.json();
-  const replyText = json.choices[0].message.content;
+  const replyText = response.text;
   console.log("Reply text: ", replyText);
   res.send({ result: { text: replyText } });
 });
