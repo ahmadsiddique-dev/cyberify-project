@@ -20,6 +20,7 @@ class OpenRouterEmbeddings extends Embeddings {
         body: JSON.stringify({
           model: this.modelName,
           input: texts,
+          max_tokens: 2000,
         }),
       },
     );
@@ -49,6 +50,7 @@ class OpenRouterEmbeddings extends Embeddings {
         body: JSON.stringify({
           model: this.modelName,
           input: text,
+          max_tokens: 2000,
         }),
       },
     );

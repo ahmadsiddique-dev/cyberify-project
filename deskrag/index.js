@@ -116,6 +116,7 @@ User Query: ${userQuery}`;
           content: prompt,
         },
       ],
+      max_tokens: 1000,
     }),
   });
 
