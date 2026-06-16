@@ -5,7 +5,7 @@ class OpenRouterEmbeddings extends Embeddings {
   constructor(fields) {
     super(fields ?? {});
     this.apiKey = fields?.apiKey ?? process.env.OPENROUTER_API_KEY;
-    this.modelName = fields?.modelName ?? "google/gemini-embedding-2-preview";
+    this.modelName = fields?.modelName ?? "google/gemini-embedding-2";
   }
 
   async embedDocuments(texts) {
