@@ -36,9 +36,6 @@ export function Header() {
           >
             Testimonials
           </a>
-          <a href="#docs" className="transition-colors hover:text-foreground">
-            Docs
-          </a>
         </nav>
 
         <div className="flex items-center gap-4">

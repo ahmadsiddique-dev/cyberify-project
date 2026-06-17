@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
   IconSparkles,
@@ -31,17 +32,21 @@ export function Hero() {
       <div className="mb-20 flex w-full flex-col items-center justify-center gap-4 sm:flex-row">
         <Button
           size="lg"
+          asChild
           className="w-full rounded-full bg-linear-to-r from-orange-600 to-amber-500 px-8 py-6 text-base font-semibold text-white shadow-lg shadow-orange-500/20 hover:from-orange-500 hover:to-amber-400 sm:w-auto"
         >
-          Get Started For Free
-          <IconArrowRight className="size-5" />
+          <Link href="/signup">
+            Get Started For Free
+            <IconArrowRight className="size-5" />
+          </Link>
         </Button>
         <Button
           size="lg"
           variant="outline"
+          asChild
           className="w-full rounded-full border-border/80 bg-background/50 px-8 py-6 text-base font-semibold hover:bg-muted sm:w-auto"
         >
-          Watch 5m Demo
+          <Link href="/demo">Watch 5m Demo</Link>
         </Button>
       </div>
 
