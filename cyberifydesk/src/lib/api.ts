@@ -7,7 +7,12 @@ export const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  const isCustomer = config.headers?.["X-Role"] === "customer"
+  const headers = config.headers
+  const isCustomer = headers && (
+    headers["X-Role"] === "customer" || 
+    headers["x-role"] === "customer" ||
+    (typeof headers.get === "function" && headers.get("x-role") === "customer")
+  )
   const token = isCustomer
     ? useCustomerStore.getState().accessToken
     : useUserStore.getState().accessToken
@@ -21,7 +26,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      const isCustomer = error.config?.headers?.["X-Role"] === "customer"
+      const headers = error.config?.headers
+      const isCustomer = headers && (
+        headers["X-Role"] === "customer" || 
+        headers["x-role"] === "customer" ||
+        (typeof headers.get === "function" && headers.get("x-role") === "customer")
+      )
       if (isCustomer) {
         useCustomerStore.getState().clearAuth()
       } else {

@@ -246,7 +246,7 @@ export function UserAuth({ organizationName }: UserAuthProps) {
                 <InputGroupInput
                   id="email"
                   type="email"
-                  placeholder="name@company.com"
+                  placeholder="name@example.com"
                   className="h-9 py-2 text-xs"
                   {...register("email")}
                 />

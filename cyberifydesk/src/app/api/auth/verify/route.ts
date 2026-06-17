@@ -18,8 +18,19 @@ export const POST = catchAsyncRoute(async (request: Request) => {
 
   const accessToken = authHeader.split(" ")[1]
 
+  let isCustomer = request.headers.get("x-role") === "customer"
+  if (!isCustomer && accessToken) {
+    try {
+      const decoded = jwt.decode(accessToken) as any
+      if (decoded && decoded.role === "user") {
+        isCustomer = true
+      }
+    } catch (e) {}
+  }
+
+  const cookieName = isCustomer ? "customerRefreshToken" : "refreshToken"
   const cookieStore = await cookies()
-  const refreshToken = cookieStore.get("refreshToken")?.value
+  const refreshToken = cookieStore.get(cookieName)?.value
 
   if (!refreshToken) {
     return NextResponse.json(
@@ -90,7 +101,8 @@ export const POST = catchAsyncRoute(async (request: Request) => {
         user.refreshToken = newRefreshToken
         await user.save()
 
-        cookieStore.set("refreshToken", newRefreshToken, {
+        const cookieName = user.role === "agent" ? "refreshToken" : "customerRefreshToken"
+        cookieStore.set(cookieName, newRefreshToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "strict",

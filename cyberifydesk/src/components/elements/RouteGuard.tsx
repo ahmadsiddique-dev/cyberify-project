@@ -106,6 +106,8 @@ export function RouteGuard({ children }: RouteGuardProps) {
         if (verifiedRef.current) {
           if (isProtectedRoute && user && user.role !== "agent") {
             const orgSlug = user.organization ? slugify(user.organization) : "default"
+            setCustomerAuth(accessToken, user)
+            clearAuth()
             router.push(`/${orgSlug}/hc`)
             return
           }
@@ -115,6 +117,8 @@ export function RouteGuard({ children }: RouteGuardProps) {
             if (user?.role === "agent") {
               router.push(`/${orgSlug}/dashboard`)
             } else {
+              setCustomerAuth(accessToken, user!)
+              clearAuth()
               router.push(`/${orgSlug}/hc`)
             }
           } else {
@@ -131,6 +135,8 @@ export function RouteGuard({ children }: RouteGuardProps) {
 
           if (isProtectedRoute && res.user && res.user.role !== "agent") {
             const orgSlug = res.user.organization ? slugify(res.user.organization) : "default"
+            setCustomerAuth(newAccessToken, res.user)
+            clearAuth()
             router.push(`/${orgSlug}/hc`)
             return
           }
@@ -140,6 +146,8 @@ export function RouteGuard({ children }: RouteGuardProps) {
             if (res.user?.role === "agent") {
               router.push(`/${orgSlug}/dashboard`)
             } else {
+              setCustomerAuth(newAccessToken, res.user!)
+              clearAuth()
               router.push(`/${orgSlug}/hc`)
             }
           } else {
