@@ -5,9 +5,9 @@ import { IconArrowLeft, IconArrowRight, IconSparkles } from "@tabler/icons-react
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Product Demo — Cyberify Desk",
+  title: "Product Demo — Hackdesk",
   description:
-    "Watch a 5-minute walkthrough of Cyberify Desk: AI-powered ticket automation, RAG knowledge bases, and instant agent reply drafts in action.",
+    "Watch a 5-minute walkthrough of Hackdesk: AI-powered ticket automation, RAG knowledge bases, and instant agent reply drafts in action.",
 }
 
 export default function DemoPage() {
@@ -32,14 +32,14 @@ export default function DemoPage() {
           </div>
 
           <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            See Cyberify Desk{" "}
+            See HackDesk{" "}
             <span className="bg-linear-to-r from-orange-600 via-amber-500 to-orange-500 bg-clip-text text-transparent">
               in Action
             </span>
           </h1>
 
           <p className="mx-auto max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Watch how Cyberify Desk automates ticket summarization, drafts instant
+            Watch how Hackdesk automates ticket summarization, drafts instant
             agent replies, and self-solves customer issues using RAG knowledge bases.
           </p>
         </div>
@@ -48,8 +48,8 @@ export default function DemoPage() {
           <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
             <iframe
               className="absolute inset-0 size-full"
-              src="https://www.youtube.com/embed/FEv7p7hKbqg?si=hlJsCnfCUmUG6EVf"
-              title="Cyberify Desk — Product Demo"
+              src="https://youtu.be/shb3h5idkl4"
+              title="Hackdesk — Product Demo"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"

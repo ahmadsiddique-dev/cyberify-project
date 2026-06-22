@@ -8,7 +8,7 @@ type ConnectionObject = {
 const connection: ConnectionObject = {}
 
 const connect = async () => {
-  const db = await mongoose.connect(`${process.env.MONGODB_URI}/cyberifydesk`)
+  const db = await mongoose.connect(`${process.env.MONGODB_URI}/hackdesk`)
   console.log("Database connected successfully") // TODO: remove this log
   return db.connections[0].readyState
 }
