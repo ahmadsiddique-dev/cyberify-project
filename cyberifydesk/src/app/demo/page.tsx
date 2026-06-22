@@ -48,7 +48,7 @@ export default function DemoPage() {
           <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
             <iframe
               className="absolute inset-0 size-full"
-              src="https://youtu.be/shb3h5idkl4"
+              src="https://www.youtube.com/embed/shb3h5idkl4"
               title="Hackdesk — Product Demo"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
